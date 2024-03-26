@@ -108,7 +108,7 @@ bool button_pressed(void)
 
 
 //-- LEDs
-#define LED_RED                    16
+#define LED_RED                   16
 
 void leds_init(void)
 {
