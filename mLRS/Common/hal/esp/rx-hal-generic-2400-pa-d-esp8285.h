@@ -94,7 +94,7 @@ void sx_dio_exti_isr_clearflag(void) {}
 
 //-- Button
 
-#define BUTTON                     0
+#define BUTTON                    0
 
 void button_init(void)
 {
@@ -108,7 +108,7 @@ bool button_pressed(void)
 
 
 //-- LEDs
-#define LED_RED                     16
+#define LED_RED                    16
 
 void leds_init(void)
 {
