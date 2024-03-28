@@ -67,20 +67,28 @@ IRAM_ATTR void CLOCK_IRQHandler(void)
 // RxClock Class
 //-------------------------------------------------------
 
-
 class RxClockBase
 {
   public:
+    RxClockBase() {
+        initialized = false;    
+    }
+
     void Init(uint16_t period_ms);
     void SetPeriod(uint16_t period_ms);
     void Reset(void);
+
+  private:
+    bool initialized = false;
 };
 
-bool hasInit = false;
 
 void RxClockBase::Init(uint16_t period_ms)
 {
-    if (hasInit) {return;}
+    if (initialized) { 
+        return; 
+    }
+
     CLOCK_PERIOD_10US = period_ms * 100; // frame rate in units of 10us
     doPostReceive = false;
     timer0_cfg = timerBegin(0, 800, 1);  // Timer 0, APB clock is 80 Mhz | divide by 80 is 100 KHz / 10 us, count up
@@ -88,7 +96,8 @@ void RxClockBase::Init(uint16_t period_ms)
     timerAlarmWrite(timer0_cfg, 1, true);
     timerAlarmEnable(timer0_cfg);
     Reset();
-    hasInit = true;
+
+    initialized = true;
 }
 
 void RxClockBase::SetPeriod(uint16_t period_ms)
@@ -101,11 +110,11 @@ void RxClockBase::Reset(void)
 {
     if (!CLOCK_PERIOD_10US) while (1) {}
 
-    __disable_irq();
+    __disable_irq(); // WHAT TO DFO HERE !!!!
     CCR1 = CNT_10us + CLOCK_PERIOD_10US;
     CCR3 = CNT_10us + CLOCK_SHIFT_10US;
     MS_C = CNT_10us + 100;
-    __enable_irq();
+    __enable_irq(); // WHAT TO DFO HERE !!!!
 }
 
 #endif // ESP_RXCLOCK_H

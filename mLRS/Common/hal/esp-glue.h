@@ -41,10 +41,10 @@ void resetFunc(void)
 #endif
 
 
-void __disable_irq(void);
+void __disable_irq(void) {}
 
 
-void __enable_irq(void);
+void __enable_irq(void) {}
 
 
 #define __NOP()  _NOP()
@@ -61,3 +61,15 @@ uint8_t restart_controller = 0;
 void setup() {}
 void main_loop(void);
 void loop() { main_loop(); }
+
+#define INITCONTROLLER_ONCE \
+    if(restart_controller <= 1){ \
+    if(restart_controller == 0){
+#define RESTARTCONTROLLER \
+    }
+#define INITCONTROLLER_END \
+    restart_controller = UINT8_MAX; \
+    }
+#define GOTO_RESTARTCONTROLLER \
+    restart_controller = 1; \
+    return;
