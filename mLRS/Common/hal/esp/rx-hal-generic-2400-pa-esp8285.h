@@ -48,7 +48,7 @@
 #define SX_BUSY                   5
 #define SX_DIO1                   4
 #define SX_TX_EN                  10
-#define SX_RX_EN                  10
+#define SX_RX_EN                  9
 
 IRQHANDLER(void IRAM_ATTR SX_DIO_EXTI_IRQHandler(void);)
 
