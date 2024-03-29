@@ -76,7 +76,7 @@ void RxClockBase::Init(uint16_t period_ms)
 
     // Initialise the timer
 #if defined(ESP32)
-    timer0_cfg = timerBegin(0, 800, 1);  // Timer 0, APB clock is 80 Mhz | divide by 80 is 100 KHz / 10 us, count up
+    timer0_cfg = timerBegin(0, 800, 1);  // Timer 0, APB clock is 80 Mhz | divide by 800 is 100 KHz / 10 us, count up
     timerAttachInterrupt(timer0_cfg, &CLOCK_IRQHandler, true);
     timerAlarmWrite(timer0_cfg, 1, true);
     timerAlarmEnable(timer0_cfg);    
