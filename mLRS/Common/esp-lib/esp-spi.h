@@ -36,7 +36,7 @@ static inline IRAM_ATTR void spi_select(void)
 #if defined(ESP32) 
   GPIO.out_w1tc = ((uint32_t)1 << SPI_CS_IO);
 #elif defined(ESP8266)
-  GPOC - (1 << SPI_CS_IO);
+  GPOC = (1 << SPI_CS_IO);
 #endif
   spi->beginTransaction(SPISettings(SPI_FREQUENCY, MSBFIRST, SPI_MODE0));
 }
@@ -48,7 +48,7 @@ static inline IRAM_ATTR void spi_deselect(void)
 #if defined(ESP32) 
   GPIO.out_w1ts = ((uint32_t)1 << SPI_CS_IO);
 #elif defined(ESP8266)
-  GPOS - (1 << SPI_CS_IO);
+  GPOS = (1 << SPI_CS_IO);
 #endif
 }
 
