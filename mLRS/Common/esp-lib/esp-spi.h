@@ -31,50 +31,52 @@ SPIClass* spi = NULL;
 
 #ifdef SPI_CS_IO
 
-static inline void spi_select(void)
-{
-  spi->beginTransaction(SPISettings(SPI_FREQUENCY, MSBFIRST, SPI_MODE0));
-  SPI_SELECT_PRE_DELAY;
-  digitalWrite(SPI_CS_IO, LOW); // CS = low
-  SPI_SELECT_POST_DELAY;
-}
-
-
-static inline void spi_deselect(void)
-{
-  SPI_DESELECT_PRE_DELAY;
-  digitalWrite(SPI_CS_IO, HIGH); // CS = high
-  SPI_DESELECT_POST_DELAY;
-  spi->endTransaction();
-}
-
-void spi_init(void)
+static inline IRAM_ATTR void spi_select(void)
 {
 #if defined(ESP32) 
-  spi = new SPIClass(HSPI);
+  GPIO.out_w1tc = ((uint32_t)1 << SPI_CS_IO);
 #elif defined(ESP8266)
-  spi = new SPIClass();
+  GPOC - (1 << SPI_CS_IO);
 #endif
+  spi->beginTransaction(SPISettings(SPI_FREQUENCY, MSBFIRST, SPI_MODE0));
+}
 
-#if defined(ESP32)
+
+static inline IRAM_ATTR void spi_deselect(void)
+{
+  spi->endTransaction();
+#if defined(ESP32) 
+  GPIO.out_w1ts = ((uint32_t)1 << SPI_CS_IO);
+#elif defined(ESP8266)
+  GPOS - (1 << SPI_CS_IO);
+#endif
+}
+
+IRAM_ATTR void spi_init(void)
+{
+  pinMode(SPI_CS_IO, OUTPUT);
+  digitalWrite(SPI_CS_IO, HIGH);
+
+  spi = new SPIClass();
+
+#if defined(ESP32) 
   spi->begin(HSPI_SCLK, HSPI_MISO, HSPI_MOSI, SPI_CS_IO);
 #elif defined(ESP8266)
-  spi->begin();
+  spi->begin(); 
 #endif
 
-  pinMode(SPI_CS_IO, OUTPUT);
 }
 
 //-- transmit, transfer, read, write functions
 
 // is blocking
-uint8_t spi_transmitchar(uint8_t c)
+IRAM_ATTR uint8_t spi_transmitchar(uint8_t c)
 {
   return spi->transfer(c);
 }
 
 // is blocking
-void spi_transfer(uint8_t* dataout, uint8_t* datain, uint16_t len)
+IRAM_ATTR void spi_transfer(uint8_t* dataout, uint8_t* datain, uint16_t len)
 {
   while (len) {
     *datain = spi_transmitchar(*dataout);
@@ -84,6 +86,11 @@ void spi_transfer(uint8_t* dataout, uint8_t* datain, uint16_t len)
   }
 }
 
+// To utilize ESP SPI Buffer
+IRAM_ATTR void spi_transferbytes(uint8_t* dataout, uint8_t* datain, uint8_t len)
+{
+  spi->transferBytes(dataout, datain, len);
+}
 
 // sends a dummy char, returns the received byte
 // is blocking
