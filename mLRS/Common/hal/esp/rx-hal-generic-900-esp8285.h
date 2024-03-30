@@ -60,14 +60,19 @@ void sx_init_gpio(void)
     digitalWrite(SX_RESET, HIGH);
 } 
 
+void sx_amp_transmit(void) {}
+void sx_amp_receive(void) {}
+
 void sx_dio_enable_exti_isr(void)
 {
     attachInterrupt(SX_DIO0, SX_DIO_EXTI_IRQHandler, RISING);
 }
 
-void sx_amp_transmit(void) {}
-void sx_amp_receive(void) {}
-void sx_dio_init_exti_isroff(void) {}
+void sx_dio_init_exti_isroff(void)
+{
+    detachInterrupt(SX_DIO0);
+}
+
 void sx_dio_exti_isr_clearflag(void) {}
 
 

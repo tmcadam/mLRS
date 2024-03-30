@@ -97,14 +97,18 @@ void sx_amp_receive(void)
     digitalWrite(SX_TX_EN, LOW);
 }
 
-void sx_dio_init_exti_isroff(void) {}
-
 void sx_dio_enable_exti_isr(void)
 {
     attachInterrupt(SX_DIO1, SX_DIO_EXTI_IRQHandler, RISING);
 }
 
+void sx_dio_init_exti_isroff(void)
+{
+    detachInterrupt(SX_DIO0);
+}
+
 void sx_dio_exti_isr_clearflag(void) {}
+
 
 //-- Button
 
