@@ -66,6 +66,9 @@ class RxClockBase
     void SetPeriod(uint16_t period_ms);
     void Reset(void);
     void disable_isr(void);
+
+  private:
+    bool initialized = false;
 };
 
 
@@ -73,6 +76,10 @@ void RxClockBase::Init(uint16_t period_ms)
 {
     CLOCK_PERIOD_10US = period_ms * 100; // frame rate in units of 10us
     doPostReceive = false;
+
+    if (initialized) { 
+        return; 
+    }
 
     // Initialise the timer
 #if defined(ESP32)
@@ -86,6 +93,7 @@ void RxClockBase::Init(uint16_t period_ms)
     timer1_write(50); //5MHz (5 ticks/us - 1677721.4 us max), 50 ticks = 10us
 #endif
     Reset();
+    initialized = true;
 }
 
 void RxClockBase::disable_isr(void)

@@ -896,10 +896,6 @@ dbg.puts(s8toBCD_s(stats.last_rssi2));*/
         sx.SetToIdle();
         sx2.SetToIdle();
         leds.SetToParamStore();
-#if defined(ESP8266) || defined(ESP32)
-        rxclock.disable_isr();     // Disable rx clock interrupt
-        sx_dio_init_exti_isroff(); // Disable DIO interrupt
-#endif
         setup_store_to_EEPROM();
 #if defined(ESP8266) || defined(ESP32)
         esp_setup(); //call reset
