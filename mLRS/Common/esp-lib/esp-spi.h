@@ -13,70 +13,56 @@
 
 SPIClass* spi = NULL;
 
+
 //-- select functions
-
-#ifndef SPI_SELECT_PRE_DELAY
-  #define SPI_SELECT_PRE_DELAY
-#endif
-#ifndef SPI_SELECT_POST_DELAY
-  #define SPI_SELECT_POST_DELAY
-#endif
-#ifndef SPI_DESELECT_PRE_DELAY
-  #define SPI_DESELECT_PRE_DELAY
-#endif
-#ifndef SPI_DESELECT_POST_DELAY
-  #define SPI_DESELECT_POST_DELAY
-#endif
-
-
-#ifdef SPI_CS_IO
 
 static inline IRAM_ATTR void spi_select(void)
 {
 #if defined(ESP32) 
   GPIO.out_w1tc = ((uint32_t)1 << SPI_CS_IO);
+  spi->beginTransaction(SPISettings(SPI_FREQUENCY, MSBFIRST, SPI_MODE0));
 #elif defined(ESP8266)
   GPOC = (1 << SPI_CS_IO);
-#endif
-  spi->beginTransaction(SPISettings(SPI_FREQUENCY, MSBFIRST, SPI_MODE0));
+#endif  
 }
-
 
 static inline IRAM_ATTR void spi_deselect(void)
 {
-  spi->endTransaction();
-#if defined(ESP32) 
+#if defined(ESP32)
+  spi->endTransaction(); 
   GPIO.out_w1ts = ((uint32_t)1 << SPI_CS_IO);
 #elif defined(ESP8266)
   GPOS = (1 << SPI_CS_IO);
 #endif
 }
 
-IRAM_ATTR void spi_init(void)
+static inline IRAM_ATTR void spi_init(void)
 {
   pinMode(SPI_CS_IO, OUTPUT);
   digitalWrite(SPI_CS_IO, HIGH);
 
-  spi = new SPIClass();
-
 #if defined(ESP32) 
+  spi = new SPIClass(HSPI);
   spi->begin(HSPI_SCLK, HSPI_MISO, HSPI_MOSI, SPI_CS_IO);
 #elif defined(ESP8266)
-  spi->begin(); 
-#endif
-
+  spi = new SPIClass();
+  spi->begin();
+  spi->setFrequency(SPI_FREQUENCY);
+  spi->setBitOrder(MSBFIRST);
+  spi->setDataMode(SPI_MODE0);
+#endif 
 }
 
 //-- transmit, transfer, read, write functions
 
 // is blocking
-IRAM_ATTR uint8_t spi_transmitchar(uint8_t c)
+static inline IRAM_ATTR uint8_t spi_transmitchar(uint8_t c)
 {
   return spi->transfer(c);
 }
 
 // is blocking
-void spi_transfer(uint8_t* dataout, uint8_t* datain, uint16_t len)
+static inline IRAM_ATTR void spi_transfer(uint8_t* dataout, uint8_t* datain, uint16_t len)
 {
   while (len) {
     *datain = spi_transmitchar(*dataout);
@@ -86,8 +72,8 @@ void spi_transfer(uint8_t* dataout, uint8_t* datain, uint16_t len)
   }
 }
 
-// To utilize ESP SPI Buffer
-IRAM_ATTR void spi_transferbytes(uint8_t* dataout, uint8_t* datain, uint8_t len)
+// to utilize ESP SPI Buffer
+static inline IRAM_ATTR void spi_transferbytes(uint8_t* dataout, uint8_t* datain, uint8_t len)
 {
   spi->transferBytes(dataout, datain, len);
 }
@@ -164,7 +150,5 @@ void spi_writecandread(uint8_t c, uint8_t* data, uint16_t datalen)
     datalen--;
   }
 }
-
-#endif
 
 #endif // ESPLIB_SPI_H
