@@ -4,26 +4,34 @@ on:
   push:
     branches:
       - main
-      - 'dev-esp**'
+      - '**'
 
 jobs:
-  build-esp-targets:
+  # build-esp-targets:
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/cache@v4
+  #       with:
+  #         path: |
+  #           ~/.cache/pip
+  #           ~/.platformio/.cache
+  #         key: ${{ runner.os }}-pio
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: '3.11'
+  #     - name: Install PlatformIO Core
+  #       run: pip install --upgrade platformio
+  #     - name: Install mLRS Dependencies
+  #       run: python3 run_setup.py
+  #     - name: Build PlatformIO Project
+  #       run: pio run
+  build-stm32-targets:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/cache@v4
+      - uses: xanderhendriks/action-build-stm32cubeide@v10.0
         with:
-          path: |
-            ~/.cache/pip
-            ~/.platformio/.cache
-          key: ${{ runner.os }}-pio
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Install PlatformIO Core
-        run: pip install --upgrade platformio
-      - name: Install mLRS Dependencies
-        run: python3 run_setup.py
-      - name: Build PlatformIO Project
-        run: pio run
+          project-path: 'mLRS/rx-diy-board01-f103cb'
+          project-target: 'rx-diy-board01-f103cb/Release'  
