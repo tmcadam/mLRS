@@ -37,8 +37,8 @@ jobs:
           python-version: '3.11'
       - name: Install mLRS Dependencies
         run: python3 run_setup.py
-      - uses: xanderhendriks/action-build-stm32cubeide@v10.0
+      - uses: xanderhendriks/action-build-stm32cubeide@v11.0
         with:
           project-path: 'mLRS/rx-diy-board01-f103cb'
-          project-target: 'rx-diy-board01-f103cb/Release'  
+          project-target: 'rx-diy-board01-f103cb/Release'
       
