@@ -39,6 +39,6 @@ jobs:
         run: python3 run_setup.py
       - uses: xanderhendriks/action-build-stm32cubeide@v11.0
         with:
-          project-path: 'mLRS/rx-diy-board01-f103cb'
+          project-path: 'mLRS'
           project-target: 'rx-diy-board01-f103cb/Release'
       
