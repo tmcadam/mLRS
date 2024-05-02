@@ -46,3 +46,6 @@
 [submodule "tools/st-drivers/stm32f3xx_hal_driver"]
 	path = tools/st-drivers/stm32f3xx_hal_driver
 	url = https://github.com/STMicroelectronics/stm32f3xx_hal_driver.git
+[submodule "mLRS/modules/NeoPixelBus"]
+	path = mLRS/modules/NeoPixelBus
+	url = https://github.com/makuna/NeoPixelBus.git
