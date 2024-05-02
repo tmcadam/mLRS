@@ -154,7 +154,7 @@ IRAM_ATTR bool button_pressed(void)
 
 
 //-- LEDs
-#include <NeoPixelBus.h>
+#include "../../../modules/NeoPixelBus/src/NeoPixelBus.h"
 #define LED_RED                   IO_P16
 bool ledRedState;
 bool ledGreenState;

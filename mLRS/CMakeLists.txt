@@ -1,0 +1,15 @@
+idf_component_register(SRCS 
+                            "CommonTx/mlrs-tx.cpp"
+                            "CommonTx/config_id.cpp"
+                            "CommonTx/in.cpp"
+                            "Common/channel_order.cpp"
+                            "Common/common_types.cpp"
+                            "Common/diversity.cpp"
+                            "Common/fhss.cpp"
+                            "Common/link_types.cpp"
+                            "Common/while.cpp"
+                            "Common/libs/filters.cpp"
+                            "modules/stm32ll-lib/src/stdstm32.c"
+                            "Common/thirdparty/gdisp.c"
+                            "modules/NeoPixelBus/src/internal/methods/Esp32_i2s.c"
+                            "modules/sx12xx-lib/src/sx128x.cpp")
