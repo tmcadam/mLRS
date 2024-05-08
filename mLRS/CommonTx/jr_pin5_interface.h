@@ -63,7 +63,11 @@ void (*uart_tc_callback_ptr)(void) = &uart_tc_callback_dummy;
 #define UART_RX_CALLBACK_FULL(c)    (*uart_rx_callback_ptr)(c)
 #define UART_TC_CALLBACK()          (*uart_tc_callback_ptr)()
 
+#ifdef ESP32
+#include "../Common/esp-lib/esp-uart.h"
+#else
 #include "../modules/stm32ll-lib/src/stdstm32-uart.h"
+#endif
 
 // not available in stdstm32-uart.h, used for half-duplex mode
 void uart_tx_putc_totxbuf(char c)
@@ -78,7 +82,11 @@ void uart_tx_putc_totxbuf(char c)
 // not available in stdstm32-uart.h, used for half-duplex mode
 void uart_tx_start(void)
 {
+#ifdef ESP32 
+    return;
+#else
     LL_USART_EnableIT_TXE(UART_UARTx); // initiates transmitting
+#endif
 }
 
 // not available in stdstm32-uart.h, used for full-duplex mode
@@ -364,8 +372,11 @@ void tPin5BridgeBase::CheckAndRescue(void)
 #endif
             state = STATE_IDLE;
             pin5_tx_enable(false);
+#ifdef ESP32
+#else
             LL_USART_DisableIT_TC(UART_UARTx);
             LL_USART_ClearFlag_TC(UART_UARTx);
+#endif    
         }
     }
 }

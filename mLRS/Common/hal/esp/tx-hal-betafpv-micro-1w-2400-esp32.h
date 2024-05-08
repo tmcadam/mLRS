@@ -53,7 +53,7 @@
 */
 
 
-//#define DEVICE_HAS_JRPIN5
+#define DEVICE_HAS_JRPIN5
 //#define DEVICE_HAS_IN
 #define DEVICE_HAS_SERIAL_OR_COM // board has UART which is shared between Serial or Com, selected by e.g. a switch
 //#define DEVICE_HAS_NO_SERIAL
@@ -64,7 +64,6 @@
 #define DEVICE_HAS_FIVEWAY
 #define DEVICE_HAS_FAN_ONOFF
 
-
 //-- UARTS
 // UARTB = serial port
 // UARTC or USB = COM (CLI)
@@ -72,6 +71,14 @@
 // UART  = JR bay pin5
 // UARTE = in port, SBus or whatever
 // UARTF = debug port
+
+#define UART_USE_HALFD_13         // JR pin5, MBridge
+#define UART_BAUD                 400000
+#define UART_USE_TX
+#define UART_TXBUFSIZE            512
+#define UART_USE_TX_ISR
+#define UART_USE_RX
+#define UART_RXBUFSIZE            512
 
 #define UARTB_USE_SERIAL // serial, is on P1/P3
 #define UARTB_BAUD                TX_SERIAL_BAUDRATE

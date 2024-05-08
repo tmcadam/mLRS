@@ -33,6 +33,8 @@ typedef enum {
   #define UART_SERIAL_NO       Serial1
 #elif defined UART_USE_SERIAL2
   #define UART_SERIAL_NO       Serial2
+#elif defined UART_USE_HALFD_13
+  #define UART_SERIAL_NO       Serial
 #else
   #error UART_SERIAL_NO must be defined!
 #endif
@@ -42,6 +44,53 @@ typedef enum {
 #endif
 #ifndef UART_RXBUFSIZE
   #define UART_RXBUFSIZE       256 // MUST be 2^N
+#endif
+
+#if (defined UART_USE_TX_ISR) && (!defined UART_USE_TX)
+  #error UART_USE_TX_ISR used without UART_USE_TX!
+#endif
+#if (defined UART_USE_RXERRORCOUNT) && (!defined UART_USE_RX)
+  #error UART_USE_RXERRORCOUNT used without UART_USE_RX!
+#endif
+
+#ifdef UART_USE_TX_ISR
+  #ifndef UART_TXBUFSIZE
+    #define UART_TXBUFSIZE      256 // MUST be 2^N
+  #endif
+  #if UART_TXBUFSIZE < 2
+    #error UART_TXBUFSIZE must be larger than 1 !
+  #elif ((UART_TXBUFSIZE & (UART_TXBUFSIZE-1)) != 0)
+    #error UART_TXBUFSIZE must be a power of 2 !
+  #endif
+
+  #define UART_TXBUFSIZEMASK  (UART_TXBUFSIZE-1)
+
+  volatile char uart_txbuf[UART_TXBUFSIZE];
+  volatile uint16_t uart_txwritepos; // pos at which the last byte was stored
+  volatile uint16_t uart_txreadpos; // pos at which the next byte is to be fetched
+#endif
+
+#ifdef UART_USE_RX
+  #ifndef UART_RXBUFSIZE
+    #define UART_RXBUFSIZE      256 //128 //MUST be 2^N
+  #endif
+  #if UART_RXBUFSIZE < 2
+    #error UART_RXBUFSIZE must be larger than 1 !
+  #elif ((UART_RXBUFSIZE & (UART_RXBUFSIZE-1)) != 0)
+    #error UART_RXBUFSIZE must be a power of 2 !
+  #endif
+
+  #define UART_RXBUFSIZEMASK  (UART_RXBUFSIZE-1)
+
+  volatile char uart_rxbuf[UART_RXBUFSIZE];
+  volatile uint16_t uart_rxwritepos; // pos at which the last byte was stored
+  volatile uint16_t uart_rxreadpos; // pos at which the next byte is to be fetched
+
+  #ifdef UART_USE_RXERRORCOUNT
+  volatile uint32_t uart_errorcnt_rxnoise;
+  volatile uint32_t uart_errorcnt_rxframe;
+  volatile uint32_t uart_errorcnt_rxoverrun;
+  #endif
 #endif
 
 
@@ -156,6 +205,26 @@ void uart_init_isroff(void)
     UART_SERIAL_NO.end();
     _uart_initit(UART_BAUD, XUART_PARITY_NO, UART_STOPBIT_1);
 }
+
+void uart_rx_enableisr(FunctionalState flag)
+{
+// #ifdef UART_USE_RX
+//   if (flag == ENABLE) {
+//     // Enable Receive Data register not empty interrupt
+// #if defined STM32F1
+//     LL_USART_ClearFlag_RXNE(UART_UARTx);
+// #endif
+//     LL_USART_ReceiveData8(UART_UARTx); // read DR to clear RXNE and error flags
+//     LL_USART_EnableIT_RXNE(UART_UARTx);
+//   } else {
+//     LL_USART_DisableIT_RXNE(UART_UARTx);
+// #if defined STM32F1
+//     LL_USART_ClearFlag_RXNE(UART_UARTx);
+// #endif
+//   }
+// #endif
+}
+
 
 
 #endif // ESPLIB_UART_H

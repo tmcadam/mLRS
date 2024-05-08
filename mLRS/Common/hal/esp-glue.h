@@ -52,6 +52,16 @@ void loop() { main_loop(); }
     restart_controller = 1; \
     return;
 
+typedef enum
+{
+  DISABLE = 0,
+  ENABLE = !DISABLE
+} FunctionalState;
+#define IS_FUNCTIONAL_STATE(STATE) (((STATE) == DISABLE) || ((STATE) == ENABLE))
+
+#define __REV16(x)  __builtin_bswap16(x)
+#define __REVSH(x)  __builtin_bswap16(x)
+#define __REV(x)    __builtin_bswap32(x)
 
 #endif // ESP_GLUE_H
 
