@@ -54,11 +54,13 @@
 
 
 #define DEVICE_HAS_JRPIN5
+#define JRPIN5_FULL_INTERNAL_ON_RX_TX
 //#define DEVICE_HAS_IN
-#define DEVICE_HAS_SERIAL_OR_COM // board has UART which is shared between Serial or Com, selected by e.g. a switch
-//#define DEVICE_HAS_NO_SERIAL
-//#define DEVICE_HAS_NO_COM
-#define DEVICE_HAS_NO_DEBUG
+//#define DEVICE_HAS_SERIAL_OR_COM // board has UART which is shared between Serial or Com, selected by e.g. a switch
+#define DEVICE_HAS_NO_SERIAL
+#define DEVICE_HAS_NO_COM
+//#define DEVICE_HAS_NO_DEBUG
+#define DEVICE_HAS_SERIAL_OR_DEBUG
 
 #define DEVICE_HAS_I2C_DISPLAY_ROT180
 #define DEVICE_HAS_FIVEWAY
@@ -72,7 +74,9 @@
 // UARTE = in port, SBus or whatever
 // UARTF = debug port
 
-#define UART_USE_HALFD_13         // JR pin5, MBridge
+#define UART_USE_SERIAL1         // Make sure not in use with other UARTs
+#define UART_USE_HALFD            // JR pin5, MBridge
+#define UART_HALFD_PIN            13
 #define UART_BAUD                 400000
 #define UART_USE_TX
 #define UART_TXBUFSIZE            512

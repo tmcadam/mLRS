@@ -8,6 +8,7 @@
 #ifndef ESPLIB_UART_H
 #define ESPLIB_UART_H
 
+#include "driver/uart.h"
 
 #ifndef ESPLIB_UART_ENUMS
 #define ESPLIB_UART_ENUMS
@@ -33,10 +34,13 @@ typedef enum {
   #define UART_SERIAL_NO       Serial1
 #elif defined UART_USE_SERIAL2
   #define UART_SERIAL_NO       Serial2
-#elif defined UART_USE_HALFD_13
-  #define UART_SERIAL_NO       Serial
 #else
   #error UART_SERIAL_NO must be defined!
+#endif
+
+#ifdef UART_USE_HALFD
+  #define UART_USE_RX_IO    UART_HALFD_PIN
+  #define UART_USE_TX_IO    NULL
 #endif
 
 #ifndef UART_TXBUFSIZE
@@ -114,7 +118,11 @@ IRAM_ATTR void uart_rx_flush(void)
 
 IRAM_ATTR void uart_tx_flush(void)
 {
+#ifdef ESP32
+    UART_SERIAL_NO.flush(true);
+#else
     UART_SERIAL_NO.flush();
+#endif
 }
 
 
@@ -139,6 +147,7 @@ IRAM_ATTR uint16_t uart_rx_available(void)
 
 void _uart_initit(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits)
 {
+    Serial.println("Hello Moto");
 #ifdef ESP32
     UART_SERIAL_NO.setTxBufferSize(UART_TXBUFSIZE);
     UART_SERIAL_NO.setRxBufferSize(UART_RXBUFSIZE);
@@ -170,8 +179,13 @@ void _uart_initit(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits
     UART_SERIAL_NO.begin(baud, config);
 #endif
 
+#if defined UART_USE_HALFD
+    UART_SERIAL_NO.setRxFIFOFull(1);  // trigger onReceive on every byte
+    UART_SERIAL_NO.setRxTimeout(1);   // wait for 1 symbol (~11 bits) to trigger Rx ISR, default 2
+#else
     UART_SERIAL_NO.setRxFIFOFull(8);  // > 57600 baud sets to 120 which is too much, buffer only 127 bytes
     UART_SERIAL_NO.setRxTimeout(1);   // wait for 1 symbol (~11 bits) to trigger Rx ISR, default 2
+#endif
 
 #elif defined ESP8266
     UART_SERIAL_NO.setRxBufferSize(UART_RXBUFSIZE);
@@ -204,27 +218,35 @@ void uart_init_isroff(void)
 {
     UART_SERIAL_NO.end();
     _uart_initit(UART_BAUD, XUART_PARITY_NO, UART_STOPBIT_1);
+    UART_SERIAL_NO.onReceive(NULL);
+}
+
+void onReceiveHandler(void) {
+  char d = UART_SERIAL_NO.read();
+  UART_RX_CALLBACK_FULL(d);
 }
 
 void uart_rx_enableisr(FunctionalState flag)
-{
-// #ifdef UART_USE_RX
-//   if (flag == ENABLE) {
-//     // Enable Receive Data register not empty interrupt
-// #if defined STM32F1
-//     LL_USART_ClearFlag_RXNE(UART_UARTx);
-// #endif
-//     LL_USART_ReceiveData8(UART_UARTx); // read DR to clear RXNE and error flags
-//     LL_USART_EnableIT_RXNE(UART_UARTx);
-//   } else {
-//     LL_USART_DisableIT_RXNE(UART_UARTx);
-// #if defined STM32F1
-//     LL_USART_ClearFlag_RXNE(UART_UARTx);
-// #endif
-//   }
-// #endif
+{   
+#ifdef UART_USE_RX
+  if (flag == ENABLE) {
+    UART_SERIAL_NO.onReceive(onReceiveHandler);
+  } else {
+    UART_SERIAL_NO.onReceive(NULL);
+  }
+#endif
 }
 
+void uart_halfd_enable_rx() {
+  Serial.println("EN RX");
+  uart_tx_flush();
+  UART_SERIAL_NO.setPins(UART_USE_RX_IO, UART_USE_TX_IO, -1, -1);
+}
+
+void uart_halfd_enable_tx() {
+  Serial.println("EN TX");
+  UART_SERIAL_NO.setPins(UART_USE_TX_IO, UART_USE_RX_IO, -1, -1);
+}
 
 
 #endif // ESPLIB_UART_H

@@ -72,6 +72,8 @@ void (*uart_tc_callback_ptr)(void) = &uart_tc_callback_dummy;
 // not available in stdstm32-uart.h, used for half-duplex mode
 void uart_tx_putc_totxbuf(char c)
 {
+    
+    Serial.print("Put: ");Serial.println(c);
     uint16_t next = (uart_txwritepos + 1) & UART_TXBUFSIZEMASK;
     if (uart_txreadpos != next) { // fifo not full //this is isr safe, works also if readpos has changed in the meanwhile
         uart_txbuf[next] = c;
@@ -83,7 +85,7 @@ void uart_tx_putc_totxbuf(char c)
 void uart_tx_start(void)
 {
 #ifdef ESP32 
-    return;
+    uart_halfd_enable_tx();
 #else
     LL_USART_EnableIT_TXE(UART_UARTx); // initiates transmitting
 #endif
@@ -231,12 +233,17 @@ void tPin5BridgeBase::Init(void)
     gpio_init(UART_TX_IO, IO_MODE_INPUT_PD, IO_SPEED_VERYFAST); // disable Tx pin, seems not really needed but makes sense
 #endif
 #if defined JRPIN5_FULL_INTERNAL_ON_RX_TX
+    #ifdef ESP32
+    // enables uart in half duplex, pin set to rx
+    uart_init();
+    #else
     LL_USART_Disable(UART_UARTx);
     LL_USART_SetTXPinLevel(UART_UARTx, LL_USART_TXPIN_LEVEL_INVERTED);
     LL_USART_SetRXPinLevel(UART_UARTx, LL_USART_RXPIN_LEVEL_INVERTED);
     LL_USART_Enable(UART_UARTx);
     gpio_init_af(UART_RX_IO, IO_MODE_INPUT_PD, UART_IO_AF, IO_SPEED_VERYFAST); // Rx pin is now rx
     gpio_init(UART_TX_IO, IO_MODE_INPUT_ANALOG, IO_SPEED_VERYFAST); // disable Tx pin
+    #endif
 #endif
 
     pin5_tx_enable(false); // also enables rx isr
@@ -262,6 +269,8 @@ void tPin5BridgeBase::TelemetryStart(void)
 
 void tPin5BridgeBase::pin5_tx_enable(bool enable_flag)
 {
+
+    Serial.println("G");
     if (enable_flag) {
         uart_rx_enableisr(DISABLE);
 
@@ -284,8 +293,13 @@ void tPin5BridgeBase::pin5_tx_enable(bool enable_flag)
         gpio_change_af(UART_RX_IO, IO_MODE_OUTPUT_ALTERNATE_PP, UART_IO_AF, IO_SPEED_VERYFAST); // Rx pin is now tx
 #endif
 #if defined JRPIN5_FULL_INTERNAL_ON_RX_TX
+    #ifdef ESP32
+        Serial.println("H");
+        uart_halfd_enable_tx();
+    #else
         gpio_change_af(UART_TX_IO, IO_MODE_OUTPUT_ALTERNATE_PP, UART_IO_AF, IO_SPEED_VERYFAST); // Tx pin is now tx
         gpio_change(UART_RX_IO, IO_MODE_INPUT_ANALOG, IO_SPEED_VERYFAST); // disable Rx pin
+    #endif
 #endif
 
     } else {
@@ -308,8 +322,13 @@ void tPin5BridgeBase::pin5_tx_enable(bool enable_flag)
         gpio_change_af(UART_RX_IO, IO_MODE_INPUT_PD, UART_IO_AF, IO_SPEED_VERYFAST); // Rx pin is now rx
 #endif
 #if defined JRPIN5_FULL_INTERNAL_ON_RX_TX
+    #ifdef ESP32
+        Serial.println("J");
+        uart_halfd_enable_rx();
+    #else
         gpio_change_af(UART_RX_IO, IO_MODE_INPUT_PD, UART_IO_AF, IO_SPEED_VERYFAST); // Rx pin is now rx
         gpio_change(UART_TX_IO, IO_MODE_INPUT_ANALOG, IO_SPEED_VERYFAST); // disable Tx pin
+    #endif
 #endif
 
         uart_rx_enableisr(ENABLE);
@@ -322,6 +341,7 @@ void tPin5BridgeBase::pin5_tx_enable(bool enable_flag)
 
 void tPin5BridgeBase::uart_rx_callback(uint8_t c)
 {
+    Serial.println("I");
     parse_nextchar(c);
 
     if (state < STATE_TRANSMIT_START) return; // we are in receiving
@@ -373,6 +393,7 @@ void tPin5BridgeBase::CheckAndRescue(void)
             state = STATE_IDLE;
             pin5_tx_enable(false);
 #ifdef ESP32
+            // ??
 #else
             LL_USART_DisableIT_TC(UART_UARTx);
             LL_USART_ClearFlag_TC(UART_UARTx);
