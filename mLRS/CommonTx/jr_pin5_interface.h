@@ -69,11 +69,10 @@ void (*uart_tc_callback_ptr)(void) = &uart_tc_callback_dummy;
 #include "../modules/stm32ll-lib/src/stdstm32-uart.h"
 #endif
 
+
 // not available in stdstm32-uart.h, used for half-duplex mode
 void uart_tx_putc_totxbuf(char c)
 {
-    
-    Serial.print("Put: ");Serial.println(c);
     uint16_t next = (uart_txwritepos + 1) & UART_TXBUFSIZEMASK;
     if (uart_txreadpos != next) { // fifo not full //this is isr safe, works also if readpos has changed in the meanwhile
         uart_txbuf[next] = c;
@@ -81,24 +80,12 @@ void uart_tx_putc_totxbuf(char c)
     }
 }
 
+
 // not available in stdstm32-uart.h, used for half-duplex mode
 void uart_tx_start(void)
 {
-#ifdef ESP32 
-    uart_halfd_enable_tx();
-#else
-    LL_USART_EnableIT_TXE(UART_UARTx); // initiates transmitting
-#endif
-}
-
-// not available in stdstm32-uart.h, used for full-duplex mode
-void uart_rx_putc_torxbuf(uint8_t c)
-{
-    uint16_t next = (uart_rxwritepos + 1) & UART_RXBUFSIZEMASK;
-    if (uart_rxreadpos != next) { // fifo not full
-        uart_rxbuf[next] = c;
-        uart_rxwritepos = next;
-    }
+    Serial.println("TX START");
+    UART_SERIAL_NO.write((uint8_t*)uart_txbuf, sizeof(uart_txbuf));
 }
 
 
@@ -173,87 +160,9 @@ void tPin5BridgeBase::Init(void)
     telemetry_state = 0;
 
     nottransmiting_tlast_ms = 0;
-
-// TX & RX XOR method, F103
-#if defined JRPIN5_TX_XOR && defined JRPIN5_RX_XOR
-    gpio_init(JRPIN5_TX_XOR, IO_MODE_OUTPUT_PP_HIGH, IO_SPEED_VERYFAST);
-    gpio_init(JRPIN5_RX_XOR, IO_MODE_OUTPUT_PP_HIGH, IO_SPEED_VERYFAST);
-    JRPIN5_TX_SET_INVERTED;
-    JRPIN5_RX_SET_INVERTED;
-#endif
-
-// TX & RX inverter with TX buffer method, F103
-#if defined JRPIN5_TX_OE
-    gpio_init(JRPIN5_TX_OE, IO_MODE_OUTPUT_PP_LOW, IO_SPEED_VERYFAST);
-    JRPIN5_TX_OE_DISABLED;
-#endif
-
     uart_init_isroff();
-
-// internal peripheral inverter method, needs a diode from Tx to Rx
-#if defined JRPIN5_RX_TX_INVERT_INTERNAL
-    LL_USART_Disable(UART_UARTx);
-    LL_USART_SetTXPinLevel(UART_UARTx, LL_USART_TXPIN_LEVEL_INVERTED);
-    LL_USART_SetRXPinLevel(UART_UARTx, LL_USART_RXPIN_LEVEL_INVERTED);
-    LL_USART_Enable(UART_UARTx);
-    gpio_init_af(UART_RX_IO, IO_MODE_INPUT_PD, UART_IO_AF, IO_SPEED_VERYFAST);
-#endif
-// internal peripheral inverter method with Tx<->Rx swap, needs a diode from Rx to Tx
-#if defined JRPIN5_RX_TX_INVERT_SWAP_INTERNAL
-    LL_USART_Disable(UART_UARTx);
-    LL_USART_SetTXPinLevel(UART_UARTx, LL_USART_TXPIN_LEVEL_INVERTED);
-    LL_USART_SetRXPinLevel(UART_UARTx, LL_USART_RXPIN_LEVEL_INVERTED);
-    LL_USART_SetTXRXSwap(UART_UARTx, LL_USART_TXRX_SWAPPED);
-    LL_USART_Enable(UART_UARTx);
-    gpio_init_af(UART_TX_IO, IO_MODE_INPUT_PD, UART_IO_AF, IO_SPEED_VERYFAST); // Tx pin is now rx after swap
-    gpio_init_af(UART_RX_IO, IO_MODE_OUTPUT_ALTERNATE_PP, UART_IO_AF, IO_SPEED_VERYFAST); // Rx pin is now tx after swap
-#endif
-// experimental, but seems to work
-// first attempt with
-//  LL_USART_ConfigHalfDuplexMode(UART_UARTx);
-//  LL_USART_SetTransferDirection(UART_UARTx, LL_USART_DIRECTION_NONE);
-//  LL_USART_SetTransferDirection(UART_UARTx, LL_USART_DIRECTION_TX);
-//  LL_USART_SetTransferDirection(UART_UARTx, LL_USART_DIRECTION_RX);
-// did not really work out well
-#if defined JRPIN5_FULL_INTERNAL_ON_TX
-    LL_USART_Disable(UART_UARTx);
-    LL_USART_SetTXPinLevel(UART_UARTx, LL_USART_TXPIN_LEVEL_INVERTED);
-    LL_USART_SetRXPinLevel(UART_UARTx, LL_USART_RXPIN_LEVEL_INVERTED);
-    LL_USART_SetTXRXSwap(UART_UARTx, LL_USART_TXRX_SWAPPED);
-    LL_USART_Enable(UART_UARTx);
-    gpio_init_af(UART_TX_IO, IO_MODE_INPUT_PD, UART_IO_AF, IO_SPEED_VERYFAST); // Tx pin is now rx
-    gpio_init(UART_RX_IO, IO_MODE_INPUT_PD, IO_SPEED_VERYFAST); // disable Rx pin, seems not really needed but makes sense
-#endif
-#if defined JRPIN5_FULL_INTERNAL_ON_RX
-    LL_USART_Disable(UART_UARTx);
-    LL_USART_SetTXPinLevel(UART_UARTx, LL_USART_TXPIN_LEVEL_INVERTED);
-    LL_USART_SetRXPinLevel(UART_UARTx, LL_USART_RXPIN_LEVEL_INVERTED);
-    LL_USART_Enable(UART_UARTx);
-    gpio_init_af(UART_RX_IO, IO_MODE_INPUT_PD, UART_IO_AF, IO_SPEED_VERYFAST); // Rx pin is now rx
-    gpio_init(UART_TX_IO, IO_MODE_INPUT_PD, IO_SPEED_VERYFAST); // disable Tx pin, seems not really needed but makes sense
-#endif
-#if defined JRPIN5_FULL_INTERNAL_ON_RX_TX
-    #ifdef ESP32
-    // enables uart in half duplex, pin set to rx
-    uart_init();
-    #else
-    LL_USART_Disable(UART_UARTx);
-    LL_USART_SetTXPinLevel(UART_UARTx, LL_USART_TXPIN_LEVEL_INVERTED);
-    LL_USART_SetRXPinLevel(UART_UARTx, LL_USART_RXPIN_LEVEL_INVERTED);
-    LL_USART_Enable(UART_UARTx);
-    gpio_init_af(UART_RX_IO, IO_MODE_INPUT_PD, UART_IO_AF, IO_SPEED_VERYFAST); // Rx pin is now rx
-    gpio_init(UART_TX_IO, IO_MODE_INPUT_ANALOG, IO_SPEED_VERYFAST); // disable Tx pin
-    #endif
-#endif
-
+    uart_halfd_init();
     pin5_tx_enable(false); // also enables rx isr
-
-#ifdef TX_FRM303_F072CB
-    gpio_init_outpp(IO_PB9);
-#endif
-#if defined TX_DIY_SXDUAL_MODULE02_G491RE || defined TX_DIY_E28DUAL_MODULE02_G491RE || defined TX_DIY_E22DUAL_MODULE02_G491RE
-    gpio_init_outpp(IO_PA0);
-#endif
 }
 
 
@@ -269,68 +178,11 @@ void tPin5BridgeBase::TelemetryStart(void)
 
 void tPin5BridgeBase::pin5_tx_enable(bool enable_flag)
 {
-
-    Serial.println("G");
     if (enable_flag) {
         uart_rx_enableisr(DISABLE);
-
-#if defined JRPIN5_TX_OE
-        JRPIN5_TX_OE_ENABLED;
-#endif
-#if defined JRPIN5_DISABLE_TX_WHILE_RX
-        uart_tx_enablepin(ENABLE);
-#endif
-#if defined JRPIN5_FULL_INTERNAL_ON_TX
-        LL_USART_Disable(UART_UARTx);
-        LL_USART_SetTXRXSwap(UART_UARTx, LL_USART_TXRX_STANDARD);
-        LL_USART_Enable(UART_UARTx);
-        gpio_change_af(UART_TX_IO, IO_MODE_OUTPUT_ALTERNATE_PP, UART_IO_AF, IO_SPEED_VERYFAST); // Tx pin is now tx
-#endif
-#if defined JRPIN5_FULL_INTERNAL_ON_RX
-        LL_USART_Disable(UART_UARTx);
-        LL_USART_SetTXRXSwap(UART_UARTx, LL_USART_TXRX_SWAPPED);
-        LL_USART_Enable(UART_UARTx);
-        gpio_change_af(UART_RX_IO, IO_MODE_OUTPUT_ALTERNATE_PP, UART_IO_AF, IO_SPEED_VERYFAST); // Rx pin is now tx
-#endif
-#if defined JRPIN5_FULL_INTERNAL_ON_RX_TX
-    #ifdef ESP32
-        Serial.println("H");
         uart_halfd_enable_tx();
-    #else
-        gpio_change_af(UART_TX_IO, IO_MODE_OUTPUT_ALTERNATE_PP, UART_IO_AF, IO_SPEED_VERYFAST); // Tx pin is now tx
-        gpio_change(UART_RX_IO, IO_MODE_INPUT_ANALOG, IO_SPEED_VERYFAST); // disable Rx pin
-    #endif
-#endif
-
     } else {
-#if defined JRPIN5_TX_OE
-        JRPIN5_TX_OE_DISABLED;
-#endif
-#if defined JRPIN5_DISABLE_TX_WHILE_RX
-        uart_tx_enablepin(DISABLE);
-#endif
-#if defined JRPIN5_FULL_INTERNAL_ON_TX
-        LL_USART_Disable(UART_UARTx);
-        LL_USART_SetTXRXSwap(UART_UARTx, LL_USART_TXRX_SWAPPED);
-        LL_USART_Enable(UART_UARTx);
-        gpio_change_af(UART_TX_IO, IO_MODE_INPUT_PD, UART_IO_AF, IO_SPEED_VERYFAST); // Tx pin is now rx
-#endif
-#if defined JRPIN5_FULL_INTERNAL_ON_RX
-        LL_USART_Disable(UART_UARTx);
-        LL_USART_SetTXRXSwap(UART_UARTx, LL_USART_TXRX_STANDARD);
-        LL_USART_Enable(UART_UARTx);
-        gpio_change_af(UART_RX_IO, IO_MODE_INPUT_PD, UART_IO_AF, IO_SPEED_VERYFAST); // Rx pin is now rx
-#endif
-#if defined JRPIN5_FULL_INTERNAL_ON_RX_TX
-    #ifdef ESP32
-        Serial.println("J");
         uart_halfd_enable_rx();
-    #else
-        gpio_change_af(UART_RX_IO, IO_MODE_INPUT_PD, UART_IO_AF, IO_SPEED_VERYFAST); // Rx pin is now rx
-        gpio_change(UART_TX_IO, IO_MODE_INPUT_ANALOG, IO_SPEED_VERYFAST); // disable Tx pin
-    #endif
-#endif
-
         uart_rx_enableisr(ENABLE);
     }
 }
@@ -341,28 +193,30 @@ void tPin5BridgeBase::pin5_tx_enable(bool enable_flag)
 
 void tPin5BridgeBase::uart_rx_callback(uint8_t c)
 {
-    Serial.println("I");
     parse_nextchar(c);
+    state = STATE_IDLE;
+    return;
+    
+    // if (state < STATE_TRANSMIT_START) return; // we are in receiving
 
-    if (state < STATE_TRANSMIT_START) return; // we are in receiving
+    // if (state != STATE_TRANSMIT_START) { // we are in transmitting, should not happen! (does appear to not happen)
+    //     state = STATE_IDLE;
+    //     return;
+    // }
 
-    if (state != STATE_TRANSMIT_START) { // we are in transmitting, should not happen! (does appear to not happen)
-        state = STATE_IDLE;
-        return;
-    }
-
-    if (transmit_start()) { // check if a transmission waits, put it into buf and return true to start
-        pin5_tx_enable(true);
-        state = STATE_TRANSMITING;
-        pin5_tx_start();
-    } else {
-        state = STATE_IDLE;
-    }
+    // if (transmit_start()) { // check if a transmission waits, put it into buf and return true to start
+    //     pin5_tx_enable(true);
+    //     state = STATE_TRANSMITING;
+    //     pin5_tx_start();
+    // } else {
+    //     state = STATE_IDLE;
+    // }
 }
 
 
 void tPin5BridgeBase::uart_tc_callback(void)
 {
+    Serial.println("TC");
     pin5_tx_enable(false); // switches on rx
     state = STATE_IDLE;
 }

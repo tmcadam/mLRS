@@ -8,6 +8,7 @@
 #ifndef ESPLIB_UART_H
 #define ESPLIB_UART_H
 
+#include "HardwareSerialCRSF.h"
 #include "driver/uart.h"
 
 #ifndef ESPLIB_UART_ENUMS
@@ -31,9 +32,11 @@ typedef enum {
 #ifdef UART_USE_SERIAL
   #define UART_SERIAL_NO       Serial
 #elif defined UART_USE_SERIAL1
-  #define UART_SERIAL_NO       Serial1
+  HardwareSerialCRSF SERIAL1(1);
+  #define UART_SERIAL_NO       SERIAL1
 #elif defined UART_USE_SERIAL2
-  #define UART_SERIAL_NO       Serial2
+  HardwareSerialCRSF SERIAL2(2);
+  #define UART_SERIAL_NO       SERIAL2
 #else
   #error UART_SERIAL_NO must be defined!
 #endif
@@ -147,7 +150,6 @@ IRAM_ATTR uint16_t uart_rx_available(void)
 
 void _uart_initit(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits)
 {
-    Serial.println("Hello Moto");
 #ifdef ESP32
     UART_SERIAL_NO.setTxBufferSize(UART_TXBUFSIZE);
     UART_SERIAL_NO.setRxBufferSize(UART_RXBUFSIZE);
@@ -174,7 +176,7 @@ void _uart_initit(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits
             break;
     }
 #if defined UART_USE_TX_IO || defined UART_USE_RX_IO // both need to be defined
-    UART_SERIAL_NO.begin(baud, config, UART_USE_RX_IO, UART_USE_TX_IO);
+    UART_SERIAL_NO.begin(baud, config, UART_USE_RX_IO, UART_USE_TX_IO, true);
 #else
     UART_SERIAL_NO.begin(baud, config);
 #endif
@@ -219,34 +221,53 @@ void uart_init_isroff(void)
     UART_SERIAL_NO.end();
     _uart_initit(UART_BAUD, XUART_PARITY_NO, UART_STOPBIT_1);
     UART_SERIAL_NO.onReceive(NULL);
+    UART_SERIAL_NO.onSend(NULL);
 }
 
+uint8_t uart_rx_cb_enabled = 0;
+uint8_t uart_tx_cb_enabled = 0;
+
 void onReceiveHandler(void) {
-  char d = UART_SERIAL_NO.read();
-  UART_RX_CALLBACK_FULL(d);
+  if (uart_rx_cb_enabled) {
+    char d = UART_SERIAL_NO.read();
+    UART_RX_CALLBACK_FULL(d);
+  }
+}
+
+void onSendHandler(void) {
+  if (uart_tx_cb_enabled) {
+    UART_TC_CALLBACK();
+  }
 }
 
 void uart_rx_enableisr(FunctionalState flag)
 {   
 #ifdef UART_USE_RX
   if (flag == ENABLE) {
-    UART_SERIAL_NO.onReceive(onReceiveHandler);
+    uart_rx_cb_enabled = 1;
+    uart_tx_cb_enabled = 0;
   } else {
-    UART_SERIAL_NO.onReceive(NULL);
+    uart_rx_cb_enabled = 0;
+    uart_tx_cb_enabled = 1;
   }
 #endif
 }
 
 void uart_halfd_enable_rx() {
-  Serial.println("EN RX");
-  uart_tx_flush();
+  //uart_tx_flush();
   UART_SERIAL_NO.setPins(UART_USE_RX_IO, UART_USE_TX_IO, -1, -1);
 }
 
 void uart_halfd_enable_tx() {
-  Serial.println("EN TX");
   UART_SERIAL_NO.setPins(UART_USE_TX_IO, UART_USE_RX_IO, -1, -1);
 }
 
+void uart_halfd_init(void) {
+  uart_rx_cb_enabled = 0;
+  uart_tx_cb_enabled = 1;
+  uart_halfd_enable_rx();
+  UART_SERIAL_NO.onReceive(onReceiveHandler);
+  UART_SERIAL_NO.onSend(onSendHandler);
+}
 
 #endif // ESPLIB_UART_H
