@@ -74,10 +74,10 @@
 // UARTE = in port, SBus or whatever
 // UARTF = debug port
 
-#define UART_USE_SERIAL1         // Make sure not in use with other UARTs
+#define UART_USE_SERIAL2         // Make sure not in use with other UARTs
 #define UART_USE_HALFD            // JR pin5, MBridge
 #define UART_HALFD_PIN            13
-#define UART_BAUD                 115200
+#define UART_BAUD                 400000
 #define UART_USE_TX
 #define UART_TXBUFSIZE            128
 #define UART_USE_TX_ISR
