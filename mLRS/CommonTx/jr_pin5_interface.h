@@ -194,8 +194,6 @@ void tPin5BridgeBase::pin5_tx_enable(bool enable_flag)
 void tPin5BridgeBase::uart_rx_callback(uint8_t c)
 {
     parse_nextchar(c);
-    state = STATE_IDLE;
-    return;
     
     // if (state < STATE_TRANSMIT_START) return; // we are in receiving
 

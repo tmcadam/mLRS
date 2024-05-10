@@ -229,8 +229,11 @@ uint8_t uart_tx_cb_enabled = 0;
 
 void onReceiveHandler(void) {
   if (uart_rx_cb_enabled) {
-    char d = UART_SERIAL_NO.read();
-    UART_RX_CALLBACK_FULL(d);
+    while (UART_SERIAL_NO.available())
+    {
+      char d = UART_SERIAL_NO.read();
+      UART_RX_CALLBACK_FULL(d);
+    }
   }
 }
 
