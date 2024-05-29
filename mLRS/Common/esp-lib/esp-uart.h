@@ -176,7 +176,7 @@ void _uart_initit(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits
             break;
     }
 #if defined UART_USE_TX_IO || defined UART_USE_RX_IO // both need to be defined
-    UART_SERIAL_NO.begin(baud, config, UART_USE_RX_IO, UART_USE_TX_IO, true);
+    UART_SERIAL_NO.begin(baud, config, UART_USE_TX_IO, UART_USE_RX_IO, true);
 #else
     UART_SERIAL_NO.begin(baud, config);
 #endif
@@ -257,20 +257,28 @@ void uart_rx_enableisr(FunctionalState flag)
 }
 
 void uart_halfd_enable_rx() {
-  //uart_tx_flush();
-  UART_SERIAL_NO.setPins(UART_USE_RX_IO, UART_USE_TX_IO, -1, -1);
+  gpio_set_direction((gpio_num_t)UART_HALFD_PIN, GPIO_MODE_INPUT);
+  gpio_matrix_in((gpio_num_t)UART_HALFD_PIN, U2RXD_IN_IDX, true);
+  gpio_pulldown_en((gpio_num_t)UART_HALFD_PIN);
+  gpio_pullup_dis((gpio_num_t)UART_HALFD_PIN);
+  //UART_SERIAL_NO.setPins(UART_USE_RX_IO, UART_USE_TX_IO, -1, -1);
 }
 
 void uart_halfd_enable_tx() {
-  UART_SERIAL_NO.setPins(UART_USE_TX_IO, UART_USE_RX_IO, -1, -1);
+  gpio_set_pull_mode((gpio_num_t)UART_HALFD_PIN, GPIO_FLOATING);
+  gpio_set_level((gpio_num_t)UART_HALFD_PIN, 0);
+  gpio_set_direction((gpio_num_t)UART_HALFD_PIN, GPIO_MODE_OUTPUT);
+  constexpr uint8_t MATRIX_DETACH_IN_LOW = 0x30; // routes 0 to matrix slot
+  gpio_matrix_in(MATRIX_DETACH_IN_LOW, U2RXD_IN_IDX, false); // Disconnect RX from all pads
+  gpio_matrix_out((gpio_num_t)UART_HALFD_PIN, U2TXD_OUT_IDX, true, false);
+  //UART_SERIAL_NO.setPins(UART_USE_TX_IO, UART_USE_RX_IO, -1, -1);
 }
 
 void uart_halfd_init(void) {
   uart_rx_cb_enabled = 0;
   uart_tx_cb_enabled = 1;
-  uart_halfd_enable_rx();
-  UART_SERIAL_NO.onReceive(onReceiveHandler);
-  UART_SERIAL_NO.onSend(onSendHandler);
+  //UART_SERIAL_NO.onReceive(onReceiveHandler);
+  //UART_SERIAL_NO.onSend(onSendHandler);
 }
 
 #endif // ESPLIB_UART_H

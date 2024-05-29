@@ -77,12 +77,12 @@
 #define UART_USE_SERIAL2         // Make sure not in use with other UARTs
 #define UART_USE_HALFD            // JR pin5, MBridge
 #define UART_HALFD_PIN            13
-#define UART_BAUD                 400000
+#define UART_BAUD                 115200
 #define UART_USE_TX
 #define UART_TXBUFSIZE            128
 #define UART_USE_TX_ISR
 #define UART_USE_RX
-#define UART_RXBUFSIZE            512
+#define UART_RXBUFSIZE            128
 
 #define UARTB_USE_SERIAL // serial, is on P1/P3
 #define UARTB_BAUD                TX_SERIAL_BAUDRATE

@@ -73,19 +73,20 @@ void (*uart_tc_callback_ptr)(void) = &uart_tc_callback_dummy;
 // not available in stdstm32-uart.h, used for half-duplex mode
 void uart_tx_putc_totxbuf(char c)
 {
-    uint16_t next = (uart_txwritepos + 1) & UART_TXBUFSIZEMASK;
-    if (uart_txreadpos != next) { // fifo not full //this is isr safe, works also if readpos has changed in the meanwhile
-        uart_txbuf[next] = c;
-        uart_txwritepos = next;
-    }
+    // uint16_t next = (uart_txwritepos + 1) & UART_TXBUFSIZEMASK;
+    // if (uart_txreadpos != next) { // fifo not full //this is isr safe, works also if readpos has changed in the meanwhile
+    //     uart_txbuf[next] = c;
+    //     uart_txwritepos = next;
+    // }
+    UART_SERIAL_NO.write(c);
 }
 
 
 // not available in stdstm32-uart.h, used for half-duplex mode
 void uart_tx_start(void)
 {
-    Serial.println("TX START");
-    UART_SERIAL_NO.write((uint8_t*)uart_txbuf, sizeof(uart_txbuf));
+    uart_rx_enableisr(DISABLE);
+    //UART_SERIAL_NO.write((uint8_t*)uart_txbuf, uart_txwritepos + 1);
 }
 
 
@@ -162,7 +163,7 @@ void tPin5BridgeBase::Init(void)
     nottransmiting_tlast_ms = 0;
     uart_init_isroff();
     uart_halfd_init();
-    pin5_tx_enable(false); // also enables rx isr
+    //pin5_tx_enable(true); // also enables rx isr
 }
 
 
@@ -178,13 +179,13 @@ void tPin5BridgeBase::TelemetryStart(void)
 
 void tPin5BridgeBase::pin5_tx_enable(bool enable_flag)
 {
-    if (enable_flag) {
-        uart_rx_enableisr(DISABLE);
-        uart_halfd_enable_tx();
-    } else {
-        uart_halfd_enable_rx();
-        uart_rx_enableisr(ENABLE);
-    }
+    // if (enable_flag) {
+    //     uart_rx_enableisr(DISABLE);
+    //     uart_halfd_enable_tx();
+    // } else {
+    //     uart_halfd_enable_rx();
+    //     uart_rx_enableisr(ENABLE);
+    // }
 }
 
 
@@ -193,7 +194,7 @@ void tPin5BridgeBase::pin5_tx_enable(bool enable_flag)
 
 void tPin5BridgeBase::uart_rx_callback(uint8_t c)
 {
-    parse_nextchar(c);
+    // parse_nextchar(c);
     
     // if (state < STATE_TRANSMIT_START) return; // we are in receiving
 
@@ -203,9 +204,9 @@ void tPin5BridgeBase::uart_rx_callback(uint8_t c)
     // }
 
     // if (transmit_start()) { // check if a transmission waits, put it into buf and return true to start
-    //     pin5_tx_enable(true);
-    //     state = STATE_TRANSMITING;
-    //     pin5_tx_start();
+    //     // pin5_tx_enable(true);
+    //     // state = STATE_TRANSMITING;
+    //     // pin5_tx_start();
     // } else {
     //     state = STATE_IDLE;
     // }
@@ -215,8 +216,8 @@ void tPin5BridgeBase::uart_rx_callback(uint8_t c)
 void tPin5BridgeBase::uart_tc_callback(void)
 {
     Serial.println("TC");
-    pin5_tx_enable(false); // switches on rx
-    state = STATE_IDLE;
+    // pin5_tx_enable(false); // switches on rx
+    // state = STATE_IDLE;
 }
 
 
@@ -230,28 +231,27 @@ void tPin5BridgeBase::uart_tc_callback(void)
 
 void tPin5BridgeBase::CheckAndRescue(void)
 {
-    uint32_t tnow_ms = millis32();
 
-    if (state < STATE_TRANSMITING) {
-        nottransmiting_tlast_ms = tnow_ms;
-    } else {
-        if (tnow_ms - nottransmiting_tlast_ms > 20) { // we are stuck, so rescue
-#ifdef TX_FRM303_F072CB
-            gpio_low(IO_PB9);
-#endif
-#if defined TX_DIY_SXDUAL_MODULE02_G491RE || defined TX_DIY_E28DUAL_MODULE02_G491RE || defined TX_DIY_E22DUAL_MODULE02_G491RE
-            gpio_high(IO_PA0);
-#endif
-            state = STATE_IDLE;
-            pin5_tx_enable(false);
-#ifdef ESP32
-            // ??
-#else
-            LL_USART_DisableIT_TC(UART_UARTx);
-            LL_USART_ClearFlag_TC(UART_UARTx);
-#endif    
-        }
-    }
+    transmit_start();
+
+        //pin5_tx_enable(true);
+        // if (transmit_start()) { // check if a transmission waits, put it into buf and return true to start
+        //     state = STATE_TRANSMITING;
+        //     pin5_tx_start();
+        // }
+
+
+    // uint32_t tnow_ms = millis32();
+
+    // if (state < STATE_TRANSMITING) {
+    //     nottransmiting_tlast_ms = tnow_ms;
+    // } else {
+    //     if (tnow_ms - nottransmiting_tlast_ms > 20) { // we are stuck, so rescue
+    //         state = STATE_IDLE;
+    //         pin5_tx_enable(false);
+    //         // some other reset things for esp32
+    //     }
+    // }
 }
 
 

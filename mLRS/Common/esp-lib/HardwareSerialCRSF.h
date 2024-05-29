@@ -71,6 +71,7 @@ void HardwareSerialCRSF::_uartSendCBTask(void *args) {
   for(;;) {
     if (uart->_inSend) {
       // maybe short delay needed here
+      //delayMicroseconds(100);
       uart->_inSend = 0;
       uart_wait_tx_done(uart->_uart_nr, (TickType_t)portMAX_DELAY);
       uart->_onSendCB();
