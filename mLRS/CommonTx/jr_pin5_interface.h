@@ -78,14 +78,15 @@ void uart_tx_putc_totxbuf(char c)
         uart_txbuf[next] = c;
         uart_txwritepos = next;
     }
+    //UART_SERIAL_NO.write(c);
 }
 
 
 // not available in stdstm32-uart.h, used for half-duplex mode
 void uart_tx_start(void)
 {
-    Serial.println("TX START");
-    UART_SERIAL_NO.write((uint8_t*)uart_txbuf, sizeof(uart_txbuf));
+    //Serial.println("TX START");
+    UART_SERIAL_NO.write((uint8_t*)uart_txbuf, uart_txwritepos + 1);
 }
 
 
@@ -195,26 +196,25 @@ void tPin5BridgeBase::uart_rx_callback(uint8_t c)
 {
     parse_nextchar(c);
     
-    // if (state < STATE_TRANSMIT_START) return; // we are in receiving
+    if (state < STATE_TRANSMIT_START) return; // we are in receiving
 
-    // if (state != STATE_TRANSMIT_START) { // we are in transmitting, should not happen! (does appear to not happen)
-    //     state = STATE_IDLE;
-    //     return;
-    // }
+    if (state != STATE_TRANSMIT_START) { // we are in transmitting, should not happen! (does appear to not happen)
+        state = STATE_IDLE;
+        return;
+    }
 
-    // if (transmit_start()) { // check if a transmission waits, put it into buf and return true to start
-    //     pin5_tx_enable(true);
-    //     state = STATE_TRANSMITING;
-    //     pin5_tx_start();
-    // } else {
-    //     state = STATE_IDLE;
-    // }
+    if (transmit_start()) { // check if a transmission waits, put it into buf and return true to start
+        pin5_tx_enable(true);
+        state = STATE_TRANSMITING;
+        pin5_tx_start();
+    } else {
+        state = STATE_IDLE;
+    }
 }
 
 
 void tPin5BridgeBase::uart_tc_callback(void)
 {
-    Serial.println("TC");
     pin5_tx_enable(false); // switches on rx
     state = STATE_IDLE;
 }

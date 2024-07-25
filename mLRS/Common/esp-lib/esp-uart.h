@@ -31,12 +31,15 @@ typedef enum {
 
 #ifdef UART_USE_SERIAL
   #define UART_SERIAL_NO       Serial
+  #define UART_SERIAL_NUM       0
 #elif defined UART_USE_SERIAL1
   HardwareSerialCRSF SERIAL1(1);
   #define UART_SERIAL_NO       SERIAL1
+  #define UART_SERIAL_NUM       1
 #elif defined UART_USE_SERIAL2
   HardwareSerialCRSF SERIAL2(2);
   #define UART_SERIAL_NO       SERIAL2
+  #define UART_SERIAL_NUM       2
 #else
   #error UART_SERIAL_NO must be defined!
 #endif
@@ -122,6 +125,7 @@ IRAM_ATTR void uart_rx_flush(void)
 IRAM_ATTR void uart_tx_flush(void)
 {
 #ifdef ESP32
+    uart_txwritepos = uart_txreadpos = 0;
     UART_SERIAL_NO.flush(true);
 #else
     UART_SERIAL_NO.flush();
@@ -151,7 +155,7 @@ IRAM_ATTR uint16_t uart_rx_available(void)
 void _uart_initit(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits)
 {
 #ifdef ESP32
-    UART_SERIAL_NO.setTxBufferSize(UART_TXBUFSIZE);
+    UART_SERIAL_NO.setTxBufferSize(1);
     UART_SERIAL_NO.setRxBufferSize(UART_RXBUFSIZE);
 
     uint32_t config = SERIAL_8N1;
@@ -183,7 +187,7 @@ void _uart_initit(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits
 
 #if defined UART_USE_HALFD
     UART_SERIAL_NO.setRxFIFOFull(1);  // trigger onReceive on every byte
-    UART_SERIAL_NO.setRxTimeout(1);   // wait for 1 symbol (~11 bits) to trigger Rx ISR, default 2
+    UART_SERIAL_NO.setRxTimeout(2);   // wait for 1 symbol (~11 bits) to trigger Rx ISR, default 2
 #else
     UART_SERIAL_NO.setRxFIFOFull(8);  // > 57600 baud sets to 120 which is too much, buffer only 127 bytes
     UART_SERIAL_NO.setRxTimeout(1);   // wait for 1 symbol (~11 bits) to trigger Rx ISR, default 2
@@ -257,12 +261,14 @@ void uart_rx_enableisr(FunctionalState flag)
 }
 
 void uart_halfd_enable_rx() {
-  //uart_tx_flush();
-  UART_SERIAL_NO.setPins(UART_USE_RX_IO, UART_USE_TX_IO, -1, -1);
+  uart_tx_flush();
+  uartDetachPins(UART_SERIAL_NUM, UART_USE_TX_IO, UART_USE_RX_IO, -1, -1);
+  uartSetPins(UART_SERIAL_NUM, UART_USE_RX_IO, UART_USE_TX_IO,-1, -1);
 }
 
 void uart_halfd_enable_tx() {
-  UART_SERIAL_NO.setPins(UART_USE_TX_IO, UART_USE_RX_IO, -1, -1);
+  uartDetachPins(UART_SERIAL_NUM, UART_USE_RX_IO, UART_USE_TX_IO,-1,-1);
+  uartSetPins(UART_SERIAL_NUM, UART_USE_TX_IO, UART_USE_RX_IO, -1, -1);
 }
 
 void uart_halfd_init(void) {
