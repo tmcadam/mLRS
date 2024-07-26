@@ -64,14 +64,21 @@ void (*uart_tc_callback_ptr)(void) = &uart_tc_callback_dummy;
 #define UART_TC_CALLBACK()          (*uart_tc_callback_ptr)()
 
 #if defined ESP8266 || defined ESP32
-#include "../Common/esp-lib/esp-uart-forjrpin5-isr.h"
-
-void uart_tx_putc_totxbuf(char c) {}
-void uart_tx_start(void) {}
-//void uart_rx_putc_torxbuf(uint8_t c) // should not be needed void
-
+#include "../Common/esp-lib/esp-uart-forjrpin5.h"
 #else
 #include "../modules/stm32ll-lib/src/stdstm32-uart.h"
+
+// not available in stdstm32-uart.h, used for full-duplex mode
+void uart_rx_putc_torxbuf(uint8_t c)
+{
+    uint16_t next = (uart_rxwritepos + 1) & UART_RXBUFSIZEMASK;
+    if (uart_rxreadpos != next) { // fifo not full
+        uart_rxbuf[next] = c;
+        uart_rxwritepos = next;
+    }
+}
+
+#endif
 
 // not available in stdstm32-uart.h, used for half-duplex mode
 void uart_tx_putc_totxbuf(char c)
@@ -86,19 +93,12 @@ void uart_tx_putc_totxbuf(char c)
 // not available in stdstm32-uart.h, used for half-duplex mode
 void uart_tx_start(void)
 {
-    LL_USART_EnableIT_TXE(UART_UARTx); // initiates transmitting
+    #if defined ESP8266 || defined ESP32
+        UART_SERIAL_NO.write((uint8_t*)uart_txbuf, uart_txwritepos + 1);    
+    #else
+        LL_USART_EnableIT_TXE(UART_UARTx); // initiates transmitting
+    #endif
 }
-
-// not available in stdstm32-uart.h, used for full-duplex mode
-void uart_rx_putc_torxbuf(uint8_t c)
-{
-    uint16_t next = (uart_rxwritepos + 1) & UART_RXBUFSIZEMASK;
-    if (uart_rxreadpos != next) { // fifo not full
-        uart_rxbuf[next] = c;
-        uart_rxwritepos = next;
-    }
-}
-#endif
 
 
 class tPin5BridgeBase
@@ -239,7 +239,9 @@ void tPin5BridgeBase::Init(void)
     gpio_init_af(UART_RX_IO, IO_MODE_INPUT_PD, UART_IO_AF, IO_SPEED_VERYFAST); // Rx pin is now rx
     gpio_init(UART_TX_IO, IO_MODE_INPUT_ANALOG, IO_SPEED_VERYFAST); // disable Tx pin
 #endif
-
+#if defined ESP8266 || defined ESP32
+    uart_halfd_init();    
+#endif
     pin5_tx_enable(false); // also enables rx isr
 
 #ifdef TX_FRM303_F072CB
@@ -253,10 +255,7 @@ void tPin5BridgeBase::Init(void)
 
 void tPin5BridgeBase::TelemetryStart(void)
 {
-#if defined ESP8266 || defined ESP32
-#else
     telemetry_start_next_tick = true;
-#endif    
 }
 
 
@@ -291,7 +290,9 @@ void tPin5BridgeBase::pin5_tx_enable(bool enable_flag)
         gpio_change_af(UART_TX_IO, IO_MODE_OUTPUT_ALTERNATE_PP, UART_IO_AF, IO_SPEED_VERYFAST); // Tx pin is now tx
         gpio_change(UART_RX_IO, IO_MODE_INPUT_ANALOG, IO_SPEED_VERYFAST); // disable Rx pin
 #endif
-
+#if defined ESP8266 || defined ESP32
+        uart_halfd_enable_tx();    
+#endif
     } else {
 #if defined JRPIN5_TX_OE
         JRPIN5_TX_OE_DISABLED;
@@ -315,7 +316,9 @@ void tPin5BridgeBase::pin5_tx_enable(bool enable_flag)
         gpio_change_af(UART_RX_IO, IO_MODE_INPUT_PD, UART_IO_AF, IO_SPEED_VERYFAST); // Rx pin is now rx
         gpio_change(UART_TX_IO, IO_MODE_INPUT_ANALOG, IO_SPEED_VERYFAST); // disable Tx pin
 #endif
-
+#if defined ESP8266 || defined ESP32
+        uart_halfd_enable_rx();    
+#endif
         uart_rx_enableisr(ENABLE);
     }
 }
@@ -325,7 +328,7 @@ void tPin5BridgeBase::pin5_tx_enable(bool enable_flag)
 // the logic analyzer shows this gives a 30-35 us gap nevertheless, which is perfect
 
 void tPin5BridgeBase::uart_rx_callback(uint8_t c)
-{/*
+{
     parse_nextchar(c);
 
     if (state < STATE_TRANSMIT_START) return; // we are in receiving
@@ -334,10 +337,7 @@ void tPin5BridgeBase::uart_rx_callback(uint8_t c)
         state = STATE_IDLE;
         return;
     }
-*/
-#if defined ESP8266 || defined ESP32
-    state = STATE_IDLE;
-#else
+
     if (transmit_start()) { // check if a transmission waits, put it into buf and return true to start
         pin5_tx_enable(true);
         state = STATE_TRANSMITING;
@@ -345,16 +345,12 @@ void tPin5BridgeBase::uart_rx_callback(uint8_t c)
     } else {
         state = STATE_IDLE;
     }
-#endif
 }
 
 
 void tPin5BridgeBase::uart_tc_callback(void)
 {
-#if defined ESP8266 || defined ESP32
-#else
     pin5_tx_enable(false); // switches on rx
-#endif
     state = STATE_IDLE;
 }
 
@@ -369,8 +365,6 @@ void tPin5BridgeBase::uart_tc_callback(void)
 
 void tPin5BridgeBase::CheckAndRescue(void)
 {
-#if defined ESP8266 || defined ESP32
-#else
 
     uint32_t tnow_ms = millis32();
 
@@ -386,11 +380,12 @@ void tPin5BridgeBase::CheckAndRescue(void)
 #endif
             state = STATE_IDLE;
             pin5_tx_enable(false);
+#if !defined ESP32 && !defined ESP8266
             LL_USART_DisableIT_TC(UART_UARTx);
             LL_USART_ClearFlag_TC(UART_UARTx);
+#endif
         }
     }
-#endif
 }
 
 
