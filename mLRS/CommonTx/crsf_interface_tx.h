@@ -181,7 +181,7 @@ void tTxCrsf::parse_nextchar(uint8_t c)
 
     if (state != STATE_IDLE) {
         uint16_t dt = tnow_us - tlast_us;
-        if (dt > CRSF_PARSE_NEXTCHAR_TMO_US) state = STATE_IDLE;
+        //if (dt > CRSF_PARSE_NEXTCHAR_TMO_US) state = STATE_IDLE;
 
         if (cnt >= sizeof(frame)) state = STATE_IDLE; // prevent buffer overflow
     }
