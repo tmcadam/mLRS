@@ -66,13 +66,13 @@ void HardwareSerialCRSF::_destroySendCBTask(void) {
 
 void HardwareSerialCRSF::_uartSendCBTask(void *args) {
   HardwareSerialCRSF *uart = (HardwareSerialCRSF *)args;
-  const TickType_t xDelay = 1;
+  const TickType_t xDelay = 1 / portTICK_PERIOD_MS;
   // maybe short delay needed here
   for(;;) {
     if (uart->_inSend) {
       // maybe short delay needed here
       uart->_inSend = 0;
-      uart_wait_tx_done(uart->_uart_nr, 100);
+      uart_wait_tx_done(uart->_uart_nr, portMAX_DELAY);
       uart->_onSendCB();
     }
     vTaskDelay(xDelay);
