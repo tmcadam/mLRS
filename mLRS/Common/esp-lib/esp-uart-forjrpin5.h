@@ -231,23 +231,20 @@ void uart_init_isroff(void)
 uint8_t uart_rx_cb_enabled = 0;
 uint8_t uart_tx_cb_enabled = 0;
 
-void onReceiveHandler(void) {
+void ICACHE_RAM_ATTR onReceiveHandler(void) {
+  char d = UART_SERIAL_NO.read();
   if (uart_rx_cb_enabled) {
-    while (UART_SERIAL_NO.available())
-    {
-      char d = UART_SERIAL_NO.read();
-      UART_RX_CALLBACK_FULL(d);
-    }
+    UART_RX_CALLBACK_FULL(d);
   }
 }
 
-void onSendHandler(void) {
+void ICACHE_RAM_ATTR onSendHandler(void) {
   if (uart_tx_cb_enabled) {
     UART_TC_CALLBACK();
   }
 }
 
-void uart_rx_enableisr(FunctionalState flag)
+void ICACHE_RAM_ATTR uart_rx_enableisr(FunctionalState flag)
 {   
 #ifdef UART_USE_RX
   if (flag == ENABLE) {
@@ -260,22 +257,33 @@ void uart_rx_enableisr(FunctionalState flag)
 #endif
 }
 
-void uart_halfd_enable_rx() {
+void ICACHE_RAM_ATTR uart_halfd_enable_rx() {
+  
+  uart_rx_flush();
   uart_tx_flush();
-  uartDetachPins(UART_SERIAL_NUM, UART_USE_TX_IO, UART_USE_RX_IO, -1, -1);
-  uartSetPins(UART_SERIAL_NUM, UART_USE_RX_IO, UART_USE_TX_IO,-1, -1);
+
+  gpio_set_direction((gpio_num_t)UART_USE_RX_IO, GPIO_MODE_INPUT);
+  gpio_matrix_in((gpio_num_t)UART_USE_RX_IO, U2RXD_IN_IDX, true);
+  gpio_pulldown_en((gpio_num_t)UART_USE_RX_IO);
+  gpio_pullup_dis((gpio_num_t)UART_USE_RX_IO);
+
 }
 
-void uart_halfd_enable_tx() {
-  uartDetachPins(UART_SERIAL_NUM, UART_USE_RX_IO, UART_USE_TX_IO,-1,-1);
-  uartSetPins(UART_SERIAL_NUM, UART_USE_TX_IO, UART_USE_RX_IO, -1, -1);
+void ICACHE_RAM_ATTR uart_halfd_enable_tx() {
+
+  gpio_set_direction((gpio_num_t)UART_USE_RX_IO, GPIO_MODE_OUTPUT);
+  gpio_set_level((gpio_num_t)UART_USE_RX_IO, 0);
+  constexpr uint8_t MATRIX_DETACH_IN_LOW = 0x30; // routes 0 to matrix slot
+  gpio_matrix_in(MATRIX_DETACH_IN_LOW, U2RXD_IN_IDX, false); // Disconnect RX from all pads
+  gpio_matrix_out((gpio_num_t)UART_USE_RX_IO, U2TXD_OUT_IDX, true, false);
+
 }
 
 void uart_halfd_init(void) {
-  uart_rx_cb_enabled = 0;
-  uart_tx_cb_enabled = 1;
+  uart_rx_flush();
   uart_halfd_enable_rx();
-  UART_SERIAL_NO.onReceive(onReceiveHandler);
+  uart_rx_enableisr(ENABLE);
+  UART_SERIAL_NO.onReceive(onReceiveHandler, false);
   UART_SERIAL_NO.onSend(onSendHandler);
 }
 
