@@ -126,7 +126,7 @@ IRAM_ATTR void uart_tx_flush(void)
 {
 #ifdef ESP32
     uart_txwritepos = uart_txreadpos = 0;
-    UART_SERIAL_NO.flush(true);
+    //UART_SERIAL_NO.flush(true);
 #else
     UART_SERIAL_NO.flush();
 #endif
@@ -257,7 +257,7 @@ void ICACHE_RAM_ATTR uart_rx_enableisr(FunctionalState flag)
 #endif
 }
 
-void ICACHE_RAM_ATTR uart_halfd_enable_rx() {
+void uart_halfd_enable_rx() {
   
   uart_rx_flush();
   uart_tx_flush();
