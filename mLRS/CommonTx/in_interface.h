@@ -77,11 +77,11 @@ class tIn : public tInBase
 #else
 // DEVICE_HAS_IN_ON_JRPIN5_RX or DEVICE_HAS_IN_ON_JRPIN5_TX
 
-#if defined ESP8266 || defined ESP32
-#error DEVICE_HAS_IN_ON_JRPIN5_RX, DEVICE_HAS_IN_ON_JRPIN5_TX not supported for ESP targets!
-#else
+// #if defined ESP8266 || defined ESP32
+// #error DEVICE_HAS_IN_ON_JRPIN5_RX, DEVICE_HAS_IN_ON_JRPIN5_TX not supported for ESP targets!
+// #else
 #include "jr_pin5_interface.h" // in case DEVICE_HAS_JRPIN5 was not defined
-#endif
+//#endif
 
 
 class tIn : public tInBase
