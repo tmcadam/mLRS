@@ -59,14 +59,14 @@
 
 #define DEVICE_HAS_JRPIN5
 //#define DEVICE_HAS_IN //for some reason sbus inv blocks the 5 way button
-//#define DEVICE_HAS_SERIAL_OR_COM // board has UART which is shared between Serial or Com, selected by e.g. a switch
-#define DEVICE_HAS_NO_SERIAL
-#define DEVICE_HAS_NO_COM
-//#define DEVICE_HAS_NO_DEBUG
-#define DEVICE_HAS_SERIAL_OR_DEBUG
+#define DEVICE_HAS_SERIAL_OR_COM // board has UART which is shared between Serial or Com, selected by e.g. a switch
+//#define DEVICE_HAS_NO_SERIAL
+//#define DEVICE_HAS_NO_COM
+#define DEVICE_HAS_NO_DEBUG
+//#define DEVICE_HAS_SERIAL_OR_DEBUG
 
-#define DEVICE_HAS_I2C_DISPLAY_ROT180
-#define DEVICE_HAS_FIVEWAY
+//#define DEVICE_HAS_I2C_DISPLAY_ROT180
+//#define DEVICE_HAS_FIVEWAY
 #define DEVICE_HAS_FAN_ONOFF
 
 
