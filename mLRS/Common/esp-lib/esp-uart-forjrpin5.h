@@ -180,8 +180,7 @@ void _uart_initit(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits
             break;
     }
 #if defined UART_USE_TX_IO || defined UART_USE_RX_IO // both need to be defined
-    Serial.println("init");
-    UART_SERIAL_NO.begin(baud, config, UART_USE_RX_IO, UART_USE_TX_IO, true);
+    UART_SERIAL_NO.begin(baud, config, UART_USE_RX_IO, UART_USE_TX_IO, false);
 #else
     UART_SERIAL_NO.begin(baud, config);
 #endif
