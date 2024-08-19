@@ -94,7 +94,10 @@ void uart_tx_putc_totxbuf(char c)
 void uart_tx_start(void)
 {
     #if defined ESP8266 || defined ESP32
-        UART_SERIAL_NO.write((uint8_t*)uart_txbuf, uart_txwritepos + 1);    
+        for ( uint8_t c = 0 ; c < uart_txwritepos ; c++ ) {
+            uart_txbuf[c] = uart_txbuf[c + 1];       
+        }
+        UART_SERIAL_NO.write((uint8_t*)uart_txbuf, uart_txwritepos);    
     #else
         LL_USART_EnableIT_TXE(UART_UARTx); // initiates transmitting
     #endif
