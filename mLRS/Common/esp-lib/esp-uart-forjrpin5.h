@@ -231,14 +231,22 @@ void uart_init_isroff(void)
 uint8_t uart_rx_cb_enabled = 0;
 uint8_t uart_tx_cb_enabled = 0;
 
-void ICACHE_RAM_ATTR onReceiveHandler(void) {
-  char d = UART_SERIAL_NO.read();
-  if (uart_rx_cb_enabled) {
-    UART_RX_CALLBACK_FULL(d);
+void ICACHE_RAM_ATTR onReceiveHandler(void) {   
+  //Serial.printf("onRecv: %d\n", xPortGetCoreID());
+  //uint32_t microsStart = micros();
+  //size_t available = UART_SERIAL_NO.available();
+  while (UART_SERIAL_NO.available()) {
+    char d = UART_SERIAL_NO.read();
+    if (uart_rx_cb_enabled) {
+      UART_RX_CALLBACK_FULL(d);
+    }
   }
+  //Serial.println(available);
+  //Serial.println(micros()-microsStart);
 }
 
 void ICACHE_RAM_ATTR onSendHandler(void) {
+  //Serial.printf("onSend: %d\n", xPortGetCoreID());
   if (uart_tx_cb_enabled) {
     UART_TC_CALLBACK();
   }
@@ -257,8 +265,8 @@ void ICACHE_RAM_ATTR uart_rx_enableisr(FunctionalState flag)
 #endif
 }
 
-void uart_halfd_enable_rx() {
-  
+void ICACHE_RAM_ATTR uart_halfd_enable_rx() {
+  //Serial.printf("enRX: %d\n", xPortGetCoreID());
   uart_rx_flush();
   uart_tx_flush();
 
@@ -270,7 +278,7 @@ void uart_halfd_enable_rx() {
 }
 
 void ICACHE_RAM_ATTR uart_halfd_enable_tx() {
-
+  //Serial.printf("enTX: %d\n", xPortGetCoreID());
   gpio_set_direction((gpio_num_t)UART_USE_RX_IO, GPIO_MODE_OUTPUT);
   gpio_set_level((gpio_num_t)UART_USE_RX_IO, 0);
   constexpr uint8_t MATRIX_DETACH_IN_LOW = 0x30; // routes 0 to matrix slot
@@ -280,6 +288,7 @@ void ICACHE_RAM_ATTR uart_halfd_enable_tx() {
 }
 
 void uart_halfd_init(void) {
+  // Serial.begin(115200);
   uart_rx_flush();
   uart_halfd_enable_rx();
   uart_rx_enableisr(ENABLE);

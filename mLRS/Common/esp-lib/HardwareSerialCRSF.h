@@ -19,10 +19,6 @@
 #define ARDUINO_SERIAL_SENDCB_TASK_PRIORITY (configMAX_PRIORITIES - 1)
 #endif
 
-#ifndef ARDUINO_SERIAL_SENDCB_TASK_RUNNING_CORE
-#define ARDUINO_SERIAL_SENDCB_TASK_RUNNING_CORE -1
-#endif
-
 typedef std::function<void(void)> OnSendCb;
 
 class HardwareSerialCRSF : public HardwareSerial
@@ -47,9 +43,14 @@ private:
 
 void HardwareSerialCRSF::_createSendCBTask(void *args) {
   // Creating UART event Task
-  xTaskCreateUniversal(
-    _uartSendCBTask, "uart_sendcb_task", ARDUINO_SERIAL_SENDCB_TASK_STACK_SIZE, this, ARDUINO_SERIAL_SENDCB_TASK_PRIORITY, &_sendCBTask,
-    ARDUINO_SERIAL_SENDCB_TASK_RUNNING_CORE
+  xTaskCreatePinnedToCore(
+    _uartSendCBTask, 
+    "uart_sendcb_task", 
+    ARDUINO_SERIAL_SENDCB_TASK_STACK_SIZE, 
+    this, 
+    ARDUINO_SERIAL_SENDCB_TASK_PRIORITY, 
+    &_sendCBTask,
+    ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
   );
 
   if (_sendCBTask == NULL) {

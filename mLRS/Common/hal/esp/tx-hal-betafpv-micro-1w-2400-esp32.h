@@ -65,8 +65,8 @@
 #define DEVICE_HAS_NO_DEBUG
 //#define DEVICE_HAS_SERIAL_OR_DEBUG
 
-//#define DEVICE_HAS_I2C_DISPLAY_ROT180
-//#define DEVICE_HAS_FIVEWAY
+#define DEVICE_HAS_I2C_DISPLAY_ROT180
+#define DEVICE_HAS_FIVEWAY
 #define DEVICE_HAS_FAN_ONOFF
 
 
@@ -189,81 +189,81 @@ IRAM_ATTR bool button_pressed(void) { return false; }
 
 
 //-- LEDs
-// #include <NeoPixelBus.h>
-// #define LED_RED                   IO_P16
-// bool ledRedState;
-// bool ledGreenState;
-// bool ledBlueState;
+#include <NeoPixelBus.h>
+#define LED_RED                   IO_P16
+bool ledRedState;
+bool ledGreenState;
+bool ledBlueState;
 
-// NeoPixelBus<NeoGrbFeature, NeoEsp32I2s0Ws2812xMethod> ledRGB(1, LED_RED);
+NeoPixelBus<NeoGrbFeature, NeoEsp32I2s0Ws2812xMethod> ledRGB(1, LED_RED);
 
 void leds_init(void)
 {
-    // ledRGB.Begin();
-    // ledRGB.Show();
+    ledRGB.Begin();
+    ledRGB.Show();
 }
 
 IRAM_ATTR void led_red_off(void)
 {
-    // if (!ledRedState) return;
-    // ledRGB.SetPixelColor(0, RgbColor(0, 0, 0));
-    // ledRGB.Show();
-    // ledRedState = 0;
+    if (!ledRedState) return;
+    ledRGB.SetPixelColor(0, RgbColor(0, 0, 0));
+    ledRGB.Show();
+    ledRedState = 0;
 }
 
 IRAM_ATTR void led_red_on(void)
 {
-    // if (ledRedState) return;
-    // ledRGB.SetPixelColor(0, RgbColor(255, 0, 0));
-    // ledRGB.Show();
-    // ledRedState = 1;
+    if (ledRedState) return;
+    ledRGB.SetPixelColor(0, RgbColor(255, 0, 0));
+    ledRGB.Show();
+    ledRedState = 1;
 }
 
 IRAM_ATTR void led_red_toggle(void)
 {
-    // if (ledRedState) { led_red_off(); } else { led_red_on(); }
+    if (ledRedState) { led_red_off(); } else { led_red_on(); }
 }
 
 IRAM_ATTR void led_green_off(void)
 {
-    // if (!ledGreenState) return;
-    // ledRGB.SetPixelColor(0, RgbColor(0, 0, 0));
-    // ledRGB.Show();
-    // ledGreenState = 0;
+    if (!ledGreenState) return;
+    ledRGB.SetPixelColor(0, RgbColor(0, 0, 0));
+    ledRGB.Show();
+    ledGreenState = 0;
 }
 
 IRAM_ATTR void led_green_on(void)
 {
-    // if (ledGreenState) return;
-    // ledRGB.SetPixelColor(0, RgbColor(0, 255, 0));
-    // ledRGB.Show();
-    // ledGreenState = 1;
+    if (ledGreenState) return;
+    ledRGB.SetPixelColor(0, RgbColor(0, 255, 0));
+    ledRGB.Show();
+    ledGreenState = 1;
 }
 
 IRAM_ATTR void led_green_toggle(void)
 {
-    // if (ledGreenState) { led_green_off(); } else { led_green_on(); }
+    if (ledGreenState) { led_green_off(); } else { led_green_on(); }
 }
 
 IRAM_ATTR void led_blue_off(void)
 {
-    // if (!ledBlueState) return;
-    // ledRGB.SetPixelColor(0, RgbColor(0, 0, 0));
-    // ledRGB.Show();
-    // ledBlueState = 0;
+    if (!ledBlueState) return;
+    ledRGB.SetPixelColor(0, RgbColor(0, 0, 0));
+    ledRGB.Show();
+    ledBlueState = 0;
 }
 
 IRAM_ATTR void led_blue_on(void)
 {
-    // if (ledBlueState) return;
-    // ledRGB.SetPixelColor(0, RgbColor(0, 0, 255));
-    // ledRGB.Show();
-    // ledBlueState = 1;
+    if (ledBlueState) return;
+    ledRGB.SetPixelColor(0, RgbColor(0, 0, 255));
+    ledRGB.Show();
+    ledBlueState = 1;
 }
 
 IRAM_ATTR void led_blue_toggle(void)
 {
-    // if (ledBlueState) { led_blue_off(); } else { led_blue_on(); }
+    if (ledBlueState) { led_blue_off(); } else { led_blue_on(); }
 }
 
 
