@@ -195,27 +195,53 @@ bool ledRedState;
 bool ledGreenState;
 bool ledBlueState;
 
+uint8_t redVal = 0;
+uint8_t greenVal = 0;
+uint8_t blueVal = 0;
+bool changeFlag = false;
+
 NeoPixelBus<NeoGrbFeature, NeoEsp32I2s0Ws2812xMethod> ledRGB(1, LED_RED);
+TaskHandle_t ledTask1;
+
+void ledTask (void * pointer) {
+    ledRGB.Begin();
+    ledRGB.Show();
+    for (;;) {
+        if (changeFlag) {
+            changeFlag = false;
+            ledRGB.SetPixelColor(0, RgbColor(redVal, greenVal, blueVal));
+            ledRGB.Show();
+        }
+        delay(20);
+    }
+}
 
 void leds_init(void)
 {
-    ledRGB.Begin();
-    ledRGB.Show();
+    xTaskCreatePinnedToCore(
+        ledTask,
+        "ledTask1",
+        4096,
+        NULL,
+        1,
+        &ledTask1,
+        0
+    );
 }
 
 IRAM_ATTR void led_red_off(void)
 {
     if (!ledRedState) return;
-    ledRGB.SetPixelColor(0, RgbColor(0, 0, 0));
-    ledRGB.Show();
+    redVal=0; greenVal=0; blueVal=0;
+    changeFlag = true;
     ledRedState = 0;
 }
 
 IRAM_ATTR void led_red_on(void)
 {
     if (ledRedState) return;
-    ledRGB.SetPixelColor(0, RgbColor(255, 0, 0));
-    ledRGB.Show();
+    redVal=255; greenVal=0; blueVal=0;
+    changeFlag = true;
     ledRedState = 1;
 }
 
@@ -227,16 +253,16 @@ IRAM_ATTR void led_red_toggle(void)
 IRAM_ATTR void led_green_off(void)
 {
     if (!ledGreenState) return;
-    ledRGB.SetPixelColor(0, RgbColor(0, 0, 0));
-    ledRGB.Show();
+    redVal=0; greenVal=0; blueVal=0;
+    changeFlag = true;
     ledGreenState = 0;
 }
 
 IRAM_ATTR void led_green_on(void)
 {
     if (ledGreenState) return;
-    ledRGB.SetPixelColor(0, RgbColor(0, 255, 0));
-    ledRGB.Show();
+    redVal=0; greenVal=255; blueVal=0;
+    changeFlag = true;
     ledGreenState = 1;
 }
 
@@ -248,16 +274,16 @@ IRAM_ATTR void led_green_toggle(void)
 IRAM_ATTR void led_blue_off(void)
 {
     if (!ledBlueState) return;
-    ledRGB.SetPixelColor(0, RgbColor(0, 0, 0));
-    ledRGB.Show();
+    redVal=0; greenVal=0; blueVal=0;
+    changeFlag = true;
     ledBlueState = 0;
 }
 
 IRAM_ATTR void led_blue_on(void)
 {
     if (ledBlueState) return;
-    ledRGB.SetPixelColor(0, RgbColor(0, 0, 255));
-    ledRGB.Show();
+    redVal=0; greenVal=0; blueVal=255;
+    changeFlag = true;
     ledBlueState = 1;
 }
 
