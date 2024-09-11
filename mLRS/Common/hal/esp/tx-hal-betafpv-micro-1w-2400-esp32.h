@@ -278,10 +278,10 @@ IRAM_ATTR void led_blue_toggle(void)
 //-- 5 Way Switch
 
 #define FIVEWAY_ADC_IO            IO_P25
-#define KEY_UP_THRESH             2800 // tom: 2839 // ow: 2966 
-#define KEY_DOWN_THRESH           2200 // tom: 2191 // ow: 2282
-#define KEY_LEFT_THRESH           1650 // tom: 1616 // ow: 1685
-#define KEY_RIGHT_THRESH          3600 // tom: 3511 // ow: 3712
+#define KEY_RIGHT_THRESH          3511 // 3600 // tom = ELRS: 3511, ow: 3712
+#define KEY_UP_THRESH             2839 // 2800 // tom = ELRS: 2839, ow: 2966, marc: 2800 didn't work for him. 2839 did
+#define KEY_DOWN_THRESH           2191 // 2200 // tom = ELRS: 2191, ow: 2282
+#define KEY_LEFT_THRESH           1616 // 1650 // tom = ELRS: 1616, ow: 1685
 #define KEY_CENTER_THRESH         0
 
 #if defined DEVICE_HAS_I2C_DISPLAY || defined DEVICE_HAS_I2C_DISPLAY_ROT180 || defined DEVICE_HAS_FIVEWAY
@@ -296,11 +296,14 @@ IRAM_ATTR uint16_t fiveway_adc_read(void)
 IRAM_ATTR uint8_t fiveway_read(void)
 {
     int16_t adc = analogRead(FIVEWAY_ADC_IO);
-    if (adc > (KEY_CENTER_THRESH-250) && adc < (KEY_CENTER_THRESH+250)) return (1 << KEY_CENTER); // 0
-    if (adc > (KEY_LEFT_THRESH-250) && adc < (KEY_LEFT_THRESH+250)) return (1 << KEY_LEFT); 
-    if (adc > (KEY_DOWN_THRESH-250) && adc < (KEY_DOWN_THRESH+250)) return (1 << KEY_DOWN);
-    if (adc > (KEY_UP_THRESH-250) && adc < (KEY_UP_THRESH+250)) return (1 << KEY_UP);
-    if (adc > (KEY_RIGHT_THRESH-250) && adc < (KEY_RIGHT_THRESH+250)) return (1 << KEY_RIGHT);
+    // BetaFPV 1W Micro seems to have pretty widely varying resistor values, 
+    // so we do a less strict method here
+    // Attention: this needs to be ordered!
+    if (adc < (( 0 + KEY_LEFT_THRESH) / 2)) return (1 << KEY_CENTER);
+    if (adc < ((KEY_LEFT_THRESH + KEY_DOWN_THRESH) / 2)) return (1 << KEY_LEFT); 
+    if (adc < ((KEY_DOWN_THRESH + KEY_UP_THRESH) / 2)) return (1 << KEY_DOWN);
+    if (adc < ((KEY_UP_THRESH + KEY_RIGHT_THRESH) / 2)) return (1 << KEY_UP);
+    if (adc < ((KEY_RIGHT_THRESH + 4095) / 2)) return (1 << KEY_RIGHT);
     return 0;
 }
 #endif

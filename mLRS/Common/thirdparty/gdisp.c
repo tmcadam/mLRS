@@ -219,12 +219,15 @@ HAL_StatusTypeDef ssd1306_put(uint8_t* buf, uint16_t len)
 } */
 
 
-HAL_StatusTypeDef ssd1306_put_noblock(uint8_t* buf, uint16_t len)
-{
 #if !(defined ESP8266 || defined ESP32)
+HAL_StatusTypeDef ssd1306_put_noblock(uint8_t* const buf, uint16_t len)
+{
     ssd1306_cmdhome();
     return i2c_put(SSD1306_DATA, buf, len);
+}
 #else
+HAL_StatusTypeDef ssd1306_put_noblock(uint8_t* buf, uint16_t len)
+{
     HAL_StatusTypeDef ret = HAL_OK;
     uint8_t page = 0;
     while ((len > 0) && (ret == HAL_OK)) {
@@ -236,8 +239,8 @@ HAL_StatusTypeDef ssd1306_put_noblock(uint8_t* buf, uint16_t len)
         len -= 128;
     }
     return ret;
-#endif
 }
+#endif
 
 
 //-------------------------------------------------------
@@ -271,7 +274,7 @@ void gdisp_hal_cmdhome(void)
 }
 
 
-HAL_StatusTypeDef gdisp_hal_put(uint8_t* buf, uint16_t len)
+HAL_StatusTypeDef gdisp_hal_put(uint8_t* const buf, uint16_t len)
 {
     switch (gdisp.type) {
         case GDISPLAY_TYPE_SSD1306: return ssd1306_put_noblock(buf, len);
@@ -547,7 +550,7 @@ void gdisp_fillrect(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t col
 
 void gdisp_setfontbackground(void) { gdisp.font_background = GDISPLAY_FONT_BG_FULL; }
 void gdisp_unsetfontbackground(void) { gdisp.font_background = GDISPLAY_FONT_BG_NONE; }
-void gdisp_setfont(const GFXfont *f) { gdisp.font = (GFXfont*)f; }
+void gdisp_setfont(const GFXfont* const f) { gdisp.font = (GFXfont*)f; }
 void gdisp_unsetfont(void) { gdisp.font = NULL; }
 
 void gdisp_setkerning(int16_t k) { gdisp.kerning = k; }

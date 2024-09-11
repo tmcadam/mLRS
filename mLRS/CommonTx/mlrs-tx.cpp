@@ -130,7 +130,7 @@ tTxCli cli;
 
 
 //-------------------------------------------------------
-// MAVLink
+// MAVLink & MSP
 //-------------------------------------------------------
 
 #include "mavlink_interface_tx.h"
@@ -142,6 +142,11 @@ uint8_t mavlink_vehicle_state(void)
 {
     return mavlink.VehicleState();
 }
+
+
+#include "msp_interface_tx.h"
+
+tTxMsp msp;
 
 
 #include "sx_serial_interface_tx.h"
@@ -419,7 +424,7 @@ void link_task_tick_ms(void)
 }
 
 
-void process_received_rxcmdframe(tRxFrame* frame)
+void process_received_rxcmdframe(tRxFrame* const frame)
 {
 tCmdFrameHeader* head = (tCmdFrameHeader*)(frame->payload);
 
@@ -439,7 +444,7 @@ tCmdFrameHeader* head = (tCmdFrameHeader*)(frame->payload);
 }
 
 
-void pack_txcmdframe(tTxFrame* frame, tFrameStats* frame_stats, tRcData* rc)
+void pack_txcmdframe(tTxFrame* const frame, tFrameStats* const frame_stats, tRcData* const rc)
 {
     switch (link_task) {
     case LINK_TASK_TX_GET_RX_SETUPDATA:
@@ -510,7 +515,7 @@ uint8_t payload_len = 0;
 }
 
 
-void process_received_frame(bool do_payload, tRxFrame* frame)
+void process_received_frame(bool do_payload, tRxFrame* const frame)
 {
     bool accept_payload = rarq.AcceptPayload();
 
@@ -576,6 +581,7 @@ tRxFrame* frame;
     // check this before received data may be passed to parsers
     if (rarq.FrameLost()) {
         mavlink.FrameLost();
+        msp.FrameLost();
     }
 
     if (rx_status > RX_STATUS_INVALID) { // RX_STATUS_VALID
@@ -728,6 +734,7 @@ RESTARTCONTROLLER
 
     in.Configure(Setup.Tx[Config.ConfigId].InMode);
     mavlink.Init(&serial, &mbridge, &serial2); // ports selected by SerialDestination, ChannelsSource
+    msp.Init(&serial, &serial2); // ports selected by SerialDestination
     sx_serial.Init(&serial, &mbridge, &serial2); // ports selected by SerialDestination, ChannelsSource
     cli.Init(&comport);
     esp_enable(Setup.Tx[Config.ConfigId].SerialDestination);
@@ -782,6 +789,7 @@ INITCONTROLLER_END
 
         link_task_tick_ms();
 
+        bind.Tick_ms();
         disp.Tick_ms();
         fan.Tick_ms();
 
@@ -944,6 +952,7 @@ IF_SX2(
 #ifndef USE_ARQ
         if (!valid_frame_received) {
             mavlink.FrameLost();
+            msp.FrameLost();
         }
 #endif
 
@@ -1046,6 +1055,7 @@ IF_MBRIDGE(
     // mBridge sends channels in regular 20 ms intervals, this we can use as sync
     if (mbridge.ChannelsUpdated(&rcData)) {
         // update channels, do only if we use mBridge also as channels source
+        // note: mBridge is used when either CHANNEL_SOURCE_MBRIDGE or SERIAL_DESTINATION_MBRDIGE, so need to check here
         if (Setup.Tx[Config.ConfigId].ChannelsSource == CHANNEL_SOURCE_MBRIDGE) {
             channelOrder.Set(Setup.Tx[Config.ConfigId].ChannelOrder); //TODO: better than before, but still better place!?
             channelOrder.Apply(&rcData);
@@ -1128,7 +1138,8 @@ IF_CRSF(
             if (mbridge.CrsfFrameAvailable(&buf, &len)) {
                 crsf.SendMBridgeFrame(buf, len);
             } else
-            if (connected_and_rx_setup_available() && SERIAL_LINK_MODE_IS_MAVLINK(Setup.Rx.SerialLinkMode)) {
+            if (connected_and_rx_setup_available() &&
+                (SERIAL_LINK_MODE_IS_MAVLINK(Setup.Rx.SerialLinkMode) || SERIAL_LINK_MODE_IS_MSP(Setup.Rx.SerialLinkMode))) {
                 crsf.SendTelemetryFrame();
             }
             INCc(do_cnt, 3);
@@ -1156,9 +1167,10 @@ IF_IN(
     }
 );
 
-    //-- Do MAVLink
+    //-- Do MAVLink & MSP
 
     mavlink.Do();
+    msp.Do();
 
     //-- Do WhileTransmit stuff
 
