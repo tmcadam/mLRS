@@ -153,7 +153,7 @@ void crsf_uart_tc_callback(void) { crsf.uart_tc_callback(); }
 
 
 // is called in isr context
-bool tTxCrsf::transmit_start(void)
+bool ICACHE_RAM_ATTR tTxCrsf::transmit_start(void)
 {
 
     tx_free = true; // tell external code that tx_frame can be filled with new data
@@ -184,7 +184,7 @@ bool tTxCrsf::transmit_start(void)
 // len is the length including type, payload, crc
 
 // is called in isr context
-void tTxCrsf::parse_nextchar(uint8_t c)
+void ICACHE_RAM_ATTR tTxCrsf::parse_nextchar(uint8_t c)
 {
     uint16_t tnow_us = micros16();
 
@@ -248,7 +248,7 @@ void tTxCrsf::parse_nextchar(uint8_t c)
 // rcData: 11 bits,  1 .. 1024 .. 2047 for +-120%
 // see design_decissions.h
 
-void tTxCrsf::fill_rcdata(tRcData* const rc)
+void ICACHE_RAM_ATTR tTxCrsf::fill_rcdata(tRcData* const rc)
 {
 tCrsfChannelBuffer buf;
 
@@ -272,7 +272,7 @@ tCrsfChannelBuffer buf;
 }
 
 
-uint8_t tTxCrsf::crc8(const uint8_t* const buf)
+uint8_t ICACHE_RAM_ATTR tTxCrsf::crc8(const uint8_t* const buf)
 {
     return crsf_crc8_update(0, &(buf[2]), buf[1] - 1);
 }
@@ -323,7 +323,7 @@ void tTxCrsf::Init(bool enable_flag)
 
 
 // polled in main loop
-bool tTxCrsf::ChannelsUpdated(tRcData* const rc)
+bool ICACHE_RAM_ATTR tTxCrsf::ChannelsUpdated(tRcData* const rc)
 {
     if (!enabled) return false;
 
@@ -342,7 +342,7 @@ bool tTxCrsf::ChannelsUpdated(tRcData* const rc)
 
 
 // polled in main loop
-bool tTxCrsf::TelemetryUpdate(uint8_t* const task, uint16_t frame_rate_ms)
+bool ICACHE_RAM_ATTR tTxCrsf::TelemetryUpdate(uint8_t* const task, uint16_t frame_rate_ms)
 {
     if (!enabled) return false;
 
@@ -388,7 +388,7 @@ bool tTxCrsf::TelemetryUpdate(uint8_t* const task, uint16_t frame_rate_ms)
 
 
 // polled in main loop
-bool tTxCrsf::CommandReceived(uint8_t* const cmd)
+bool ICACHE_RAM_ATTR tTxCrsf::CommandReceived(uint8_t* const cmd)
 {
     if (!enabled) return false;
 
@@ -416,25 +416,25 @@ bool tTxCrsf::CommandReceived(uint8_t* const cmd)
 }
 
 
-uint8_t* tTxCrsf::GetPayloadPtr(void)
+uint8_t* ICACHE_RAM_ATTR tTxCrsf::GetPayloadPtr(void)
 {
     return ((tCrsfFrameHeader*)frame)->payload;
 }
 
 
-uint8_t tTxCrsf::GetPayloadLen(void)
+uint8_t ICACHE_RAM_ATTR tTxCrsf::GetPayloadLen(void)
 {
     return ((tCrsfFrameHeader*)frame)->len - 2;
 }
 
 
-uint8_t tTxCrsf::GetCmdModelId(void)
+uint8_t ICACHE_RAM_ATTR tTxCrsf::GetCmdModelId(void)
 {
     return cmd_modelid_value;
 }
 
 
-void tTxCrsf::SendMBridgeFrame(void* const payload, uint8_t payload_len)
+void ICACHE_RAM_ATTR tTxCrsf::SendMBridgeFrame(void* const payload, uint8_t payload_len)
 {
     send_frame(CRSF_FRAME_ID_MBRIDGE_TO_RADIO, payload, payload_len);
 }
@@ -443,7 +443,7 @@ void tTxCrsf::SendMBridgeFrame(void* const payload, uint8_t payload_len)
 //-------------------------------------------------------
 // helper
 
-void tTxCrsf::send_frame(const uint8_t frame_id, void* const payload, uint8_t payload_len)
+void ICACHE_RAM_ATTR tTxCrsf::send_frame(const uint8_t frame_id, void* const payload, uint8_t payload_len)
 {
     tx_frame[0] = CRSF_ADDRESS_RADIO; // correct? OpenTx accepts CRSF_ADDRESS_RADIO or CRSF_OPENTX_SYNC, so correct
     tx_frame[1] = (4-2) + payload_len;
@@ -459,7 +459,7 @@ void tTxCrsf::send_frame(const uint8_t frame_id, void* const payload, uint8_t pa
 // CRSF Telemetry Handler
 
 // called in main loop, when crsf.TelemetryUpdate() true
-void tTxCrsf::SendTelemetryFrame(void)
+void ICACHE_RAM_ATTR tTxCrsf::SendTelemetryFrame(void)
 {
     // native CRSF
 
@@ -537,7 +537,7 @@ void tTxCrsf::SendTelemetryFrame(void)
 #define CRSF_REV_U32(x)  __REV(x)
 
 
-void tTxCrsf::handle_mavlink_msg_heartbeat(fmav_heartbeat_t* const payload)
+void ICACHE_RAM_ATTR tTxCrsf::handle_mavlink_msg_heartbeat(fmav_heartbeat_t* const payload)
 {
     memset(flightmode.flight_mode, 0, sizeof(flightmode.flight_mode));
 
@@ -554,7 +554,7 @@ void tTxCrsf::handle_mavlink_msg_heartbeat(fmav_heartbeat_t* const payload)
 }
 
 
-int32_t mav_battery_voltage(fmav_battery_status_t* payload)
+int32_t ICACHE_RAM_ATTR mav_battery_voltage(fmav_battery_status_t* payload)
 {
     int32_t voltage = 0;
     for (uint8_t i = 0; i < 10; i++) {
@@ -571,7 +571,7 @@ int32_t mav_battery_voltage(fmav_battery_status_t* payload)
 }
 
 
-void tTxCrsf::handle_mavlink_msg_battery_status(fmav_battery_status_t* const payload)
+void ICACHE_RAM_ATTR tTxCrsf::handle_mavlink_msg_battery_status(fmav_battery_status_t* const payload)
 {
     if (payload->id != 0) return;
 
@@ -587,7 +587,7 @@ void tTxCrsf::handle_mavlink_msg_battery_status(fmav_battery_status_t* const pay
 }
 
 
-void tTxCrsf::handle_mavlink_msg_attitude(fmav_attitude_t* const payload)
+void ICACHE_RAM_ATTR tTxCrsf::handle_mavlink_msg_attitude(fmav_attitude_t* const payload)
 {
     attitude.pitch = CRSF_REV_I16(10000.0f * payload->pitch);
     attitude.roll = CRSF_REV_I16(10000.0f * payload->roll);
@@ -596,19 +596,19 @@ void tTxCrsf::handle_mavlink_msg_attitude(fmav_attitude_t* const payload)
 }
 
 
-void tTxCrsf::handle_mavlink_msg_gps_raw_int(fmav_gps_raw_int_t* const payload)
+void ICACHE_RAM_ATTR tTxCrsf::handle_mavlink_msg_gps_raw_int(fmav_gps_raw_int_t* const payload)
 {
     gps_raw_int_sat = payload->satellites_visible;
 }
 
 
-void tTxCrsf::handle_mavlink_msg_gps2_raw(fmav_gps2_raw_t* const payload)
+void ICACHE_RAM_ATTR tTxCrsf::handle_mavlink_msg_gps2_raw(fmav_gps2_raw_t* const payload)
 {
     gps2_raw_sat = payload->satellites_visible;
 }
 
 
-void tTxCrsf::handle_mavlink_msg_global_position_int(fmav_global_position_int_t* const payload)
+void ICACHE_RAM_ATTR tTxCrsf::handle_mavlink_msg_global_position_int(fmav_global_position_int_t* const payload)
 {
     gps.latitude = CRSF_REV_U32(payload->lat);
     gps.longitude = CRSF_REV_U32(payload->lon);
@@ -640,7 +640,7 @@ void tTxCrsf::handle_mavlink_msg_global_position_int(fmav_global_position_int_t*
 }
 
 
-void tTxCrsf::handle_mavlink_msg_vfr_hud(fmav_vfr_hud_t* const payload)
+void ICACHE_RAM_ATTR tTxCrsf::handle_mavlink_msg_vfr_hud(fmav_vfr_hud_t* const payload)
 {
     vfr_hud_groundspd_mps = payload->groundspeed;
 
@@ -650,7 +650,7 @@ void tTxCrsf::handle_mavlink_msg_vfr_hud(fmav_vfr_hud_t* const payload)
 
 
 // called by MAVLink interface, when a MAVLink frame has been received
-void tTxCrsf::TelemetryHandleMavlinkMsg(fmav_message_t* const msg)
+void ICACHE_RAM_ATTR tTxCrsf::TelemetryHandleMavlinkMsg(fmav_message_t* const msg)
 {
     if (msg->sysid == 0) return; // this can't be anything meaningful
 
@@ -796,7 +796,7 @@ void tTxCrsf::TelemetryHandleMavlinkMsg(fmav_message_t* const msg)
 
 #define DEG2RADF  1.745329252E-02f
 
-int16_t wrap180_cdeg(int16_t angle_cdeg)
+int16_t ICACHE_RAM_ATTR wrap180_cdeg(int16_t angle_cdeg)
 {
     while (angle_cdeg > 1800) { angle_cdeg -= 3600; }
     while (angle_cdeg < -1800) { angle_cdeg += 3600; }
@@ -804,7 +804,7 @@ int16_t wrap180_cdeg(int16_t angle_cdeg)
 }
 
 
-void tTxCrsf::TelemetryHandleMspMsg(msp_message_t* const msg)
+void ICACHE_RAM_ATTR tTxCrsf::TelemetryHandleMspMsg(msp_message_t* const msg)
 {
     // conversions deduced from comparing
     //  src/main/fc/fc_msp.c for MSP units
@@ -904,7 +904,7 @@ void tTxCrsf::TelemetryHandleMspMsg(msp_message_t* const msg)
 // somehow the OpenTx naming/usage doesn't make fully sense
 // so we "correct" things here such that the names make sense, irrespective of uplink/downlink notation
 
-void tTxCrsf::SendLinkStatistics(void)
+void ICACHE_RAM_ATTR tTxCrsf::SendLinkStatistics(void)
 {
 tCrsfLinkStatistics clstats;
 
@@ -927,7 +927,7 @@ tCrsfLinkStatistics clstats;
 }
 
 
-void tTxCrsf::SendLinkStatisticsTx(void)
+void ICACHE_RAM_ATTR tTxCrsf::SendLinkStatisticsTx(void)
 {
 tCrsfLinkStatisticsTx clstats;
 
@@ -943,7 +943,7 @@ tCrsfLinkStatisticsTx clstats;
 }
 
 
-void tTxCrsf::SendLinkStatisticsRx(void)
+void ICACHE_RAM_ATTR tTxCrsf::SendLinkStatisticsRx(void)
 {
 tCrsfLinkStatisticsRx clstats;
 

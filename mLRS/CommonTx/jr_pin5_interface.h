@@ -81,7 +81,7 @@ void uart_rx_putc_torxbuf(uint8_t c)
 #endif
 
 // not available in stdstm32-uart.h, used for half-duplex mode
-void uart_tx_putc_totxbuf(char c)
+void ICACHE_RAM_ATTR uart_tx_putc_totxbuf(char c)
 {
     uint16_t next = (uart_txwritepos + 1) & UART_TXBUFSIZEMASK;
     if (uart_txreadpos != next) { // fifo not full //this is isr safe, works also if readpos has changed in the meanwhile
@@ -91,7 +91,7 @@ void uart_tx_putc_totxbuf(char c)
 }
 
 // not available in stdstm32-uart.h, used for half-duplex mode
-void uart_tx_start(void)
+void ICACHE_RAM_ATTR uart_tx_start(void)
 {
     #if defined ESP8266 || defined ESP32
         for ( uint8_t c = 0 ; c < uart_txwritepos ; c++ ) {
@@ -256,7 +256,7 @@ void tPin5BridgeBase::Init(void)
 }
 
 
-void tPin5BridgeBase::TelemetryStart(void)
+void ICACHE_RAM_ATTR tPin5BridgeBase::TelemetryStart(void)
 {
     telemetry_start_next_tick = true;
 }
@@ -266,7 +266,7 @@ void tPin5BridgeBase::TelemetryStart(void)
 // Interface to the uart hardware peripheral used for the bridge
 // called in isr context
 
-void tPin5BridgeBase::pin5_tx_enable(bool enable_flag)
+void ICACHE_RAM_ATTR tPin5BridgeBase::pin5_tx_enable(bool enable_flag)
 {
     if (enable_flag) {
         uart_rx_enableisr(DISABLE);
@@ -330,7 +330,7 @@ void tPin5BridgeBase::pin5_tx_enable(bool enable_flag)
 // we do not add a delay here before we transmit
 // the logic analyzer shows this gives a 30-35 us gap nevertheless, which is perfect
 
-void tPin5BridgeBase::uart_rx_callback(uint8_t c)
+void ICACHE_RAM_ATTR tPin5BridgeBase::uart_rx_callback(uint8_t c)
 {
     parse_nextchar(c);
 
@@ -351,7 +351,7 @@ void tPin5BridgeBase::uart_rx_callback(uint8_t c)
 }
 
 
-void tPin5BridgeBase::uart_tc_callback(void)
+void ICACHE_RAM_ATTR tPin5BridgeBase::uart_tc_callback(void)
 {
     pin5_tx_enable(false); // switches on rx
     state = STATE_IDLE;
@@ -366,7 +366,7 @@ void tPin5BridgeBase::uart_tc_callback(void)
 // and not even channel data would be received anymore (= very catastrophic). This code avoids this.
 // With proper isr priorities, the issue is mainly gone, but the code remains, as safety net.
 
-void tPin5BridgeBase::CheckAndRescue(void)
+void ICACHE_RAM_ATTR tPin5BridgeBase::CheckAndRescue(void)
 {
 
     uint32_t tnow_ms = millis32();
