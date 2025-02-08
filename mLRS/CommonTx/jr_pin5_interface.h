@@ -93,6 +93,7 @@ void ICACHE_RAM_ATTR uart_tx_putc_totxbuf(char c)
 // not available in stdstm32-uart.h, used for half-duplex mode
 void ICACHE_RAM_ATTR uart_tx_start(void)
 {
+    gpio_low(IO_P32);
     #if defined ESP8266 || defined ESP32
         for ( uint8_t c = 0 ; c < uart_txwritepos ; c++ ) {
             uart_txbuf[c] = uart_txbuf[c + 1];       
@@ -101,6 +102,7 @@ void ICACHE_RAM_ATTR uart_tx_start(void)
     #else
         LL_USART_EnableIT_TXE(UART_UARTx); // initiates transmitting
     #endif
+    gpio_high(IO_P32);
 }
 
 

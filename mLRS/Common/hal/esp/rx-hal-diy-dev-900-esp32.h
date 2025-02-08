@@ -30,7 +30,6 @@
 
 
 //-- SX1: SX12xx & SPI
-
 #define SPI_CS_IO                 IO_P18
 #define SPI_FREQUENCY             10000000L
 #define SPI_MISO                  IO_P19

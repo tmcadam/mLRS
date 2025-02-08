@@ -191,3 +191,9 @@
 #endif
 
 
+#ifdef TX_DIY_DEV_900_ESP32
+  #define DEVICE_NAME "DIY DEV 900 ESP32"
+  #define DEVICE_IS_TRANSMITTER
+  #define DEVICE_HAS_SX127x
+  #define FREQUENCY_BAND_915_MHZ_FCC
+#endif

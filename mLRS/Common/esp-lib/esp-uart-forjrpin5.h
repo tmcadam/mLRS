@@ -231,14 +231,16 @@ void uart_init_isroff(void)
 uint8_t uart_rx_cb_enabled = 0;
 uint8_t uart_tx_cb_enabled = 0;
 
-void ICACHE_RAM_ATTR onReceiveHandler(void) {   
+void ICACHE_RAM_ATTR onReceiveHandler(void) {
   //Serial.printf("onRecv: %d\n", xPortGetCoreID());
   //uint32_t microsStart = micros();
   //size_t available = UART_SERIAL_NO.available();
   while (UART_SERIAL_NO.available()) {
     char d = UART_SERIAL_NO.read();
     if (uart_rx_cb_enabled) {
+      gpio_low(IO_P33);
       UART_RX_CALLBACK_FULL(d);
+      gpio_high(IO_P33);
     }
   }
   //Serial.println(available);
@@ -246,10 +248,12 @@ void ICACHE_RAM_ATTR onReceiveHandler(void) {
 }
 
 void ICACHE_RAM_ATTR onSendHandler(void) {
+  gpio_low(IO_P32);
   //Serial.printf("onSend: %d\n", xPortGetCoreID());
   if (uart_tx_cb_enabled) {
     UART_TC_CALLBACK();
   }
+  gpio_high(IO_P32);
 }
 
 void ICACHE_RAM_ATTR uart_rx_enableisr(FunctionalState flag)

@@ -107,4 +107,6 @@
 #include "rx-hal-diy-dev-900-esp32.h"
 #endif
 
-
+#ifdef TX_DIY_DEV_900_ESP32
+#include "tx-hal-diy-dev-900-esp32.h"
+#endif
