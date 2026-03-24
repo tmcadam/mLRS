@@ -1139,7 +1139,6 @@ IF_MBRIDGE_OR_CRSF( // to allow CRSF mBridge emulation
                 mbridge.HandleCmd(MBRIDGE_CMD_REQUEST_INFO);
             }
             break;
-        case MBRIDGE_CMD_PARAM_REQUEST_LIST: mbridge.HandleCmd(MBRIDGE_CMD_PARAM_REQUEST_LIST); break;
         case MBRIDGE_CMD_REQUEST_CMD: mbridge.HandleRequestCmd(mbridge.GetPayloadPtr()); break;
         case MBRIDGE_CMD_PARAM_SET: {
             bool rx_param_changed;
