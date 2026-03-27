@@ -26,8 +26,8 @@ extern "C" {
 //-------------------------------------------------------
 // offloads blocking Wire data transfers to Core 0 so that
 // Core 1 (radio) is not blocked during display updates.
-// the JRPin5 100us timer ISR also runs on Core 0 but is
-// harmless — ~2us preemption, Wire resumes immediately.
+// the JRPin5 TxDone task also runs on Core 0 but on a
+// higher priority task.
 
 uint8_t i2c_dev_adr;
 
