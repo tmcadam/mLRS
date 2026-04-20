@@ -38,6 +38,7 @@ typedef enum {
     TXCRSF_SEND_LINK_STATISTICS_RX,
     TXCRSF_SEND_TELEMETRY_FRAME, // native or passthrough telemetry frame
     TXCRSF_SEND_DEVICE_INFO,
+    TXCRSF_SEND_SYNC_PACKET,
 } TXCRSF_SEND_ENUM;
 
 
@@ -69,6 +70,7 @@ class tTxCrsf : public tPin5BridgeBase
     void SendLinkStatisticsTx(void);
     void SendLinkStatisticsRx(void);
     void SendDeviceInfo(void);
+    void SendSyncPacket(void);
 
     void SendMBridgeFrame(void* const payload, uint8_t payload_len);
 
@@ -429,6 +431,18 @@ bool tTxCrsf::TelemetryUpdate(uint8_t* const task, uint16_t frame_rate_ms)
         *task = TXCRSF_SEND_DEVICE_INFO;
         return true;
     }
+
+#ifdef DEVICE_SENDS_CRSF_SYNC_PACKET
+    // Send timing sync periodically to keep handset timing aligned.
+    // Keep this purely time-based to emit one sync packet every 200 ms.
+    static uint32_t sync_tlast_ms = 0;
+    uint32_t tnow_ms = millis32();
+    if ((tnow_ms - sync_tlast_ms) >= 200) {
+        sync_tlast_ms = tnow_ms;
+        *task = TXCRSF_SEND_SYNC_PACKET;
+        return true;
+    }
+#endif
 
     *task = TXCRSF_SEND_TELEMETRY_FRAME;
     return true;
@@ -1061,6 +1075,37 @@ char buf[64]; // DEVICE_NAME is limited to 20 chars max, so this is plenty of sp
     send_frame(CRSF_FRAME_ID_DEVICE_INFO, buf, len + CRSF_DEVICE_INFO_FRAGMENT_LEN);
 }
 
+// this packet requests the handset to use to 4ms / 250 Hz packet rate, and gives it a small negative timing margin to give
+// the handset some headroom to process the packets and send telemetry back in time. Currently only used for Radiomaster AX12.
+void tTxCrsf::SendSyncPacket(void)
+{
+    uint8_t buf[11];
+
+    // Extended radio frame header: destination, source.
+    buf[0] = CRSF_ADDRESS_RADIO;
+    buf[1] = CRSF_ADDRESS_TRANSMITTER_MODULE;
+
+    // Timing sync subtype.
+    buf[2] = CRSF_HANDSET_SUBCMD_TIMING;
+
+    // Request 250 Hz packet rate: 4 ms = 4000 us, encoded as us * 10.
+    uint32_t rate = 4000UL * 10UL;
+    buf[3] = (rate >> 24) & 0xFF;
+    buf[4] = (rate >> 16) & 0xFF;
+    buf[5] = (rate >> 8) & 0xFF;
+    buf[6] = rate & 0xFF;
+
+    // Use a small negative margin (in 0.1 us units) to give handset headroom.
+    int32_t offset = -1000;
+    uint32_t offset_u = (uint32_t)offset;
+    buf[7] = (offset_u >> 24) & 0xFF;
+    buf[8] = (offset_u >> 16) & 0xFF;
+    buf[9] = (offset_u >> 8) & 0xFF;
+    buf[10] = offset_u & 0xFF;
+
+    send_frame(CRSF_FRAME_ID_RADIO, buf, sizeof(buf));
+}
+
 
 #else
 
@@ -1079,6 +1124,7 @@ class tTxCrsfDummy
     void SendLinkStatisticsTx(void) {}
     void SendLinkStatisticsRx(void) {}
     void SendDevideInfo(void) {}
+    void SendSyncPacket(void) {}
 
     void PassthroughSetBattery0Capacity(uint32_t capacity) {}
 };
@@ -1088,4 +1134,3 @@ tTxCrsfDummy crsf;
 #endif // ifdef DEVICE_HAS_JRPIN5
 
 #endif // CRSF_INTERFACE_TX_H
-

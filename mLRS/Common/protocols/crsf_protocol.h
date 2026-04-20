@@ -118,6 +118,12 @@ typedef enum {
 } CRSF_COMMAND_ENUM;
 
 
+// SubType IDs for CRSF_FRAME_ID_RADIO handset packets
+typedef enum {
+    CRSF_HANDSET_SUBCMD_TIMING          = 0x10,
+} CRSF_HANDSET_SUBCMD_ENUM;
+
+
 // SubType IDs for CRSF_FRAME_ID_AP_CUSTOM_TELEM
 typedef enum {
     CRSF_AP_CUSTOM_TELEM_TYPE_SINGLE_PACKET_PASSTHROUGH = 0xF0,
