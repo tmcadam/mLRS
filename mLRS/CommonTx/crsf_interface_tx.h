@@ -419,12 +419,6 @@ bool tTxCrsf::TelemetryUpdate(uint8_t* const task, uint16_t frame_rate_ms)
     //   53 ms -> ca 13 = 3 + 10
     //   7 ms  -> 3x = 21 ms -> ca 5 = 3 + 2
 
-    switch (curr_telemetry_state) {
-        case 0: *task = TXCRSF_SEND_LINK_STATISTICS; return true;
-        case 1: *task = TXCRSF_SEND_LINK_STATISTICS_TX; return true;
-        case 2: *task = TXCRSF_SEND_LINK_STATISTICS_RX; return true;
-    }
-
     // if we got a PING_DEVICE, send a DEVICE_INFO instead of a telemetry frame
     if (ping_device_received) {
         ping_device_received = false;
@@ -433,6 +427,7 @@ bool tTxCrsf::TelemetryUpdate(uint8_t* const task, uint16_t frame_rate_ms)
     }
 
 #ifdef DEVICE_SENDS_CRSF_SYNC_PACKET
+
     // Send timing sync periodically to keep handset timing aligned.
     // Keep this purely time-based to emit one sync packet every 200 ms.
     static uint32_t sync_tlast_ms = 0;
@@ -443,6 +438,12 @@ bool tTxCrsf::TelemetryUpdate(uint8_t* const task, uint16_t frame_rate_ms)
         return true;
     }
 #endif
+
+    switch (curr_telemetry_state) {
+        case 0: *task = TXCRSF_SEND_LINK_STATISTICS; return true;
+        case 1: *task = TXCRSF_SEND_LINK_STATISTICS_TX; return true;
+        case 2: *task = TXCRSF_SEND_LINK_STATISTICS_RX; return true;
+    }
 
     *task = TXCRSF_SEND_TELEMETRY_FRAME;
     return true;
