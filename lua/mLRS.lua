@@ -9,7 +9,7 @@
 ----------------------------------------------------------------------
 -- copy script to SCRIPTS\TOOLS folder on OpenTx SD card
 -- works with mLRS v1.3.03 and later, mOTX v33
--- 13.02.2026: Many constants/variables put into tables. 
+-- 13.02.2026: Many constants/variables put into tables.
 -- Tables are less efficient memory and cpu wise, but are being used to avoid the 200 local limit.
 
 local VERSION = {
@@ -45,7 +45,7 @@ local LAYOUT = {
     W = LCD_W,
     W_HALF = LCD_W / 2,
     DY = 21, -- default line distance
-    -- popup box, location of popup box 
+    -- popup box, location of popup box
     POPUP_X = 80, -- LCD_W/2-160
     POPUP_Y = 76,
     POPUP_W = 320,
@@ -231,7 +231,7 @@ local MBRIDGE_CMD_LEN = {
     [MBRIDGE_CMD.PARAM_SET]       = 7,  -- MBRIDGE_CMD_PARAM_SET_LEN
     [MBRIDGE_CMD.MODELID_SET]     = 3,  -- MBRIDGE_CMD_MODELID_SET_LEN
 }
-    
+
 local MBRIDGE_PARAM_TYPE = {
     UINT8       = 0,
     INT8        = 1,
@@ -578,12 +578,12 @@ end
 ----------------------------------------------------------------------
 
 local function updateDeviceParamCounts(f)
-    if f <= 1 then -- called when DEVICE_INFO is received 
+    if f <= 1 then -- called when DEVICE_INFO is received
         if DEVICE_INFO.param_num > 0 then DEVICE_PARAM_LIST_max_index = DEVICE_INFO.param_num - 1 end
     else -- called when end of param list is received
         if DEVICE_INFO.param_num == 0 then DEVICE_PARAM_LIST_max_index = #DEVICE_PARAM_LIST end
     end
-end  
+end
 
 
 local function doParamLoop()
@@ -861,7 +861,7 @@ local CURSOR = {
     sidx = 0, -- index into string for string edits
     top_idx = 0, -- index of first displayed option on Edit Tx/Rx pages
 }
-  
+
 local bindphrase_chars = "abcdefghijklmnopqrstuvwxyz0123456789_#-."
 
 
@@ -1142,6 +1142,7 @@ end
 ----------------------------------------------------------------------
 
 local isEdgeTx = false
+local isAX12 = false
 local isFirstParamDownload = true
 local FirstParamDownloadTmo_10ms = 0
 
@@ -1173,12 +1174,12 @@ local function drawParamDownload()
     local s = "("..tostring(idx)
     if DEVICE_PARAM_LIST_max_index > 0 then
         s = s.."/"..tostring(DEVICE_PARAM_LIST_max_index)
-    end    
+    end
     s = s..")"
     if isEdgeTx then -- with OpenTx TEXT_BGCOLOR doesn't seem to work correctly
         lcd.setColor(CUSTOM_COLOR, THEME.textBgColor)
         lcd.drawFilledRectangle(LAYOUT.W_HALF + 90, y+LAYOUT.INFO_DY-5, 70, 30, CUSTOM_COLOR)
-    end    
+    end
     lcd.drawText(LAYOUT.W_HALF + 100, y+LAYOUT.INFO_DY, s, THEME.textColor)
 end
 
@@ -1288,11 +1289,11 @@ local function drawPageMain()
     y = LAYOUT.INFO_Y
     lcd.setColor(CUSTOM_COLOR, GREY)
     lcd.drawFilledRectangle(0, y-5, LAYOUT.W, 1, CUSTOM_COLOR)
-    
+
     if DEVICE_DOWNLOAD_is_running then
         drawParamDownload()
         return
-    end    
+    end
 
     lcd.drawText(LAYOUT.INFO_LEFT_X, y, "Tx Power", THEME.textColor)
     lcd.drawText(LAYOUT.INFO_LEFT_X, y+LAYOUT.INFO_DY, "Tx Diversity", THEME.textColor)
@@ -1469,7 +1470,7 @@ local function Do(event)
             end
         end
         if not isFirstParamDownload then drawParamDownload(); end
-        return 
+        return
     end
     isFirstParamDownload = false
 
@@ -1549,3 +1550,4 @@ local function scriptRun(event)
 end
 
 return { init=scriptInit, run=scriptRun }
+
