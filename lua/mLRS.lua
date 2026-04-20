@@ -114,6 +114,12 @@ local function setupColors()
         THEME.titleBgColor = COLOR_THEME_SECONDARY1
         THEME.menuTitleColor = COLOR_THEME_PRIMARY2
         THEME.textDisableColor = COLOR_THEME_DISABLED
+    elseif (osname == 'EdgeTXqw') then -- RM AX12
+        THEME.textColor = BLACK
+        THEME.textBgColor = BLACK
+        THEME.titleBgColor = BLACK
+        THEME.menuTitleColor = WHITE
+        THEME.textDisableColor = LIGHTGREY
     else
         THEME.textColor = TEXT_COLOR
         THEME.textBgColor = TEXT_BGCOLOR -- doesn't work in OTX !!
