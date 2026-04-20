@@ -27,11 +27,10 @@
 // https://github.com/ExpressLRS/targets/blob/master/TX/Radiomaster%20AX12.json
 
 
-#define USE_DEBUG
 #define DEVICE_HAS_JRPIN5
 #define DEVICE_HAS_SINGLE_LED_RGB
-#define DEVICE_HAS_DEBUG
 #define DEVICE_HAS_NO_COM
+#define DEVICE_HAS_NO_DEBUG
 #define DEVICE_HAS_ESP_WIFI_BRIDGE_ON_SERIAL
 #define DEVICE_HAS_ESP_WIFI_BRIDGE_CONFIGURE
 #define DEVICE_HAS_ESP_WIFI_BRIDGE_ESP32C3
@@ -53,13 +52,6 @@
 #define UARTB_TXBUFSIZE           TX_SERIAL_TXBUFSIZE
 #define UARTB_RXBUFSIZE           TX_SERIAL_RXBUFSIZE
 
-// #define UARTC_USE_SERIAL // COM (CLI), is connected to USB-C via USB<>UART
-// #define UARTC_BAUD                115200
-// #define UARTC_USE_TX_IO           IO_P1
-// #define UARTC_USE_RX_IO           IO_P3
-// #define UARTC_TXBUFSIZE           0 // TX FIFO = 128
-// #define UARTC_RXBUFSIZE           TX_COM_RXBUFSIZE
-
 #define JR_PIN5_FULL_DUPLEX
 #define UART_USE_SERIAL1 // full duplex CRSF/MBridge (JR pin5)
 #define UART_BAUD                 1870000
@@ -67,10 +59,6 @@
 #define UART_USE_RX_IO            IO_P13
 #define UART_TXBUFSIZE            0  // TX FIFO = 128
 #define UART_RXBUFSIZE            0  // RX FIFO = 128 + 1
-
-#define UARTF_USE_SERIAL // debug on USB UART
-#define UARTF_BAUD                115200
-
 
 //-- SX1: LR11xx & SPI
 
