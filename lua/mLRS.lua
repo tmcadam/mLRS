@@ -1459,15 +1459,15 @@ local function Do(event)
     -- OpenTx: must display
     -- EdgeTx: don't display everything in param upload, EdgeTx is super slow
     -- 20.3.2026: hm, seems to work fine now
-    if isEdgeTx and DEVICE_DOWNLOAD_is_running then
+    if (isEdgeTx or isAX12) and DEVICE_DOWNLOAD_is_running then
         if isFirstParamDownload and FirstParamDownloadTmo_10ms > 0 then
             if getTime() > FirstParamDownloadTmo_10ms then
                 local attr = RED+CENTER
                 if LCD_W >= 480 then attr = attr + MIDSIZE end
-                lcd.drawText(LAYOUT.W_HALF, LCD_H/4, "!! Please check if CRSF baudrate is 400k !!", attr)
+                lcd.drawText(LAYOUT.W_HALF, LCD_H/4, "!! Please check CRSF baudrate!!", attr)
                 FirstParamDownloadTmo_10ms = 0 -- disable
-            end  
-        end  
+            end
+        end
         if not isFirstParamDownload then drawParamDownload(); end
         return 
     end
@@ -1507,8 +1507,11 @@ local function scriptInit()
 
     DEVICE_DOWNLOAD_is_running = true -- we start the script with this
     isFirstParamDownload = true
-    FirstParamDownloadTmo_10ms = tnow_10ms + 500 --- drop a warning after 5 secs
-    
+    if isAX12 then
+        FirstParamDownloadTmo_10ms = tnow_10ms + 800 --- drop a warning after 8 secs
+    else
+        FirstParamDownloadTmo_10ms = tnow_10ms + 500 -- drop a warning after 5 secs
+    end
     if tnow_10ms < 300 then
         DEVICE_SAVE_t_last = 300 - tnow_10ms -- treat script start like a Save
     else
