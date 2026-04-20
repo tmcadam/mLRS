@@ -127,6 +127,10 @@
 #include "tx-hal-radiomaster-int-tx15-esp32.h"
 #endif
 
+#ifdef TX_ELRS_RADIOMASTER_INTERNAL_AX12_ESP32
+#include "tx-hal-radiomaster-int-ax12-esp32.h"
+#endif
+
 #ifdef TX_ELRS_RADIOMASTER_INTERNAL_GX12_ESP32
 #include "tx-hal-radiomaster-int-gx12-esp32.h"
 #endif
