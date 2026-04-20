@@ -1497,6 +1497,7 @@ end
 local function scriptInit()
     local ver, radio, maj, minor, rev, osname = getVersion()
     isEdgeTx = (osname == 'EdgeTX')
+    isAX12 = (osname == 'EdgeTXqw')
 
     setupScreen()
     setupColors()
