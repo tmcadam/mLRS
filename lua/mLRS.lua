@@ -246,7 +246,18 @@ local function mbridgeCmdLen(cmd)
 end
 
 local function crsfIsConnected()
-    if getRSSI() ~= 0 then return true end
+
+    local ver, radio, maj, minor, rev, osname = getVersion()
+
+    if osname ~= 'EdgeTXqw' and getRSSI() ~= 0 then
+        return true
+    end
+
+    if osname == 'EdgeTXqw' then
+        -- TODO. Need a substitute for getRSSI on AX12
+        return true
+    end
+
     return false
 end
 
