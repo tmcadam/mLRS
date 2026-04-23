@@ -254,8 +254,8 @@ local function crsfIsConnected()
     end
 
     if osname == 'EdgeTXqw' then
-        -- TODO. Need a substitute for getRSSI on AX12
-        return true
+        -- TODO. Need a substitute for getRSSI on AX12, change to true to see rx options on AX12 for testing
+        return false
     end
 
     return false
