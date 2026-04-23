@@ -688,7 +688,7 @@ uint8_t len;
 
     bool found = false;
 
-    uint32_t bauds[7] = { ser_baud, 9600, 19200, 38400, 57600, 115200, 230400 };
+    uint32_t bauds[8] = { ser_baud, 9600, 19200, 38400, 57600, 115200, 230400, 460800 };
     uint8_t baud_idx = 0;
     for (uint8_t cc = 0; cc < 3; cc++) { // when in BT it seems to need f-ing long to start up
         for (baud_idx = 0; baud_idx < sizeof(bauds)/sizeof(bauds[0]); baud_idx++) {

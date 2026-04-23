@@ -103,6 +103,7 @@ typedef enum {
     SERIAL_BAUDRATE_57600,
     SERIAL_BAUDRATE_115200,
     SERIAL_BAUDRATE_230400,
+    SERIAL_BAUDRATE_460800,
     SERIAL_BAUDRATE_NUM,
 } SERIAL_BAUDRATE_ENUM;
 
@@ -483,7 +484,7 @@ typedef struct
 } tSxGlobalConfig;
 
 
-typedef struct 
+typedef struct
 {
     uint8_t Num;
     uint32_t Seed;

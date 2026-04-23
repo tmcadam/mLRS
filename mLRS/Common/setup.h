@@ -964,6 +964,7 @@ void setup_configure_config(uint8_t config_id)
     case SERIAL_BAUDRATE_57600: Config.SerialBaudrate = 57600; break;
     case SERIAL_BAUDRATE_115200: Config.SerialBaudrate = 115200; break;
     case SERIAL_BAUDRATE_230400: Config.SerialBaudrate = 230400; break;
+    case SERIAL_BAUDRATE_460800: Config.SerialBaudrate = 460800; break;
     default:
 #ifdef DEVICE_IS_TRANSMITTER
         Config.SerialBaudrate = 115200;

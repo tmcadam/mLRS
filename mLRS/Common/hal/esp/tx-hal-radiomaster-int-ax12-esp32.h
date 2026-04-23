@@ -46,7 +46,7 @@
 // UARTF = debug port
 
 #define UARTB_USE_SERIAL // serial
-#define UARTB_BAUD                460800
+#define UARTB_BAUD                TX_SERIAL_BAUDRATE
 #define UARTB_USE_TX_IO           IO_P1
 #define UARTB_USE_RX_IO           IO_P3
 #define UARTB_TXBUFSIZE           TX_SERIAL_TXBUFSIZE
